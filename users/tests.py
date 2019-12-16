@@ -8,7 +8,6 @@ class UsersManagersTests(TestCase):
         user = User.objects.create_user(email='normal@user.com', password='foo')
         self.assertEqual(user.email, 'normal@user.com')
         self.assertTrue(user.is_active)
-        self.assertFalse(user.is_staff)
         self.assertFalse(user.is_superuser)
         try:
             # username is None for the AbstractUser option
@@ -28,7 +27,6 @@ class UsersManagersTests(TestCase):
         admin_user = User.objects.create_superuser('super@user.com', 'foo')
         self.assertEqual(admin_user.email, 'super@user.com')
         self.assertTrue(admin_user.is_active)
-        self.assertTrue(admin_user.is_staff)
         self.assertTrue(admin_user.is_superuser)
         try:
             # username is None for the AbstractUser option
