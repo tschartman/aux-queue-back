@@ -8,4 +8,4 @@ class IsAuthenticatedOrCreate(permissions.IsAuthenticated):
 
 class IsUser(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
-        return obj.email == request.user.email
+        return obj.id == request.user.id

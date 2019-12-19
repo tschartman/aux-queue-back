@@ -7,4 +7,5 @@ router.register(r'users', views.UserViewset, basename='users')
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('users/<int:pk>/spotify/', views.SpotifyAuthDetail.as_view() )
 ]
