@@ -15,11 +15,12 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from auxqueue.applications import spotify
+from auxqueue.applications import spotify, login
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('o/', include('oauth2_provider.urls')),
+    path('login/', login.auth),
     path('', include('users.urls')),
     path('spotify/', spotify.auth),
     path('spotify/code/', spotify.code),

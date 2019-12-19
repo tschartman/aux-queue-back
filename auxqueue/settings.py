@@ -33,8 +33,10 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env('SECRET_KEY')
-CLIENT_ID = env('CLIENT_ID')
-CLIENT_SECRET = env('CLIENT_SECRET')
+APP_CLIENT_ID = env('APP_CLIENT_ID')
+APP_CLIENT_SECRET = env('APP_CLIENT_SECRET')
+SPOTIFY_CLIENT_ID = env('SPOTIFY_CLIENT_ID')
+SPOTIFY_CLIENT_SECRET = env('SPOTIFY_CLIENT_SECRET')
 
 ALLOWED_HOSTS = ['*']
 

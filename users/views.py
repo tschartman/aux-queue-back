@@ -17,6 +17,7 @@ class UserViewset(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save()
 
+
 class SpotifyAuthDetail(generics.RetrieveUpdateAPIView):
 
     queryset = CustomUser.objects.all()

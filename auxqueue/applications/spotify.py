@@ -15,7 +15,7 @@ def auth(request):
 
 def code(request):
     code = request.GET.get('code', '')
-    headers = {'Authorization': "Basic ".encode("utf-8") + base64.b64encode((settings.CLIENT_ID + ":" + settings.CLIENT_SECRET).encode("utf-8"))}
+    headers = {'Authorization': "Basic ".encode("utf-8") + base64.b64encode((settings.SPOTIFY_CLIENT_ID + ":" + settings.SPOTIFY_CLIENT_SECRET).encode("utf-8"))}
     data = {
         'grant_type': 'authorization_code',
         'code': code,
@@ -28,7 +28,7 @@ def code(request):
 @csrf_exempt
 def refresh(request):
     token = json.loads(request.body).get('token', '')
-    headers = {'Authorization': "Basic ".encode("utf-8") + base64.b64encode((settings.CLIENT_ID + ":" + settings.CLIENT_SECRET).encode("utf-8"))}
+    headers = {'Authorization': "Basic ".encode("utf-8") + base64.b64encode((settings.SPOTIFY_CLIENT_ID + ":" + settings.SPOTIFY_CLIENT_SECRET).encode("utf-8"))}
     data = {
         'grant_type': 'refresh_token',
         'refresh_token': token
