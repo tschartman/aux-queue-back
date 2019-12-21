@@ -11,7 +11,7 @@ from django.conf import settings
 
 @csrf_exempt
 def auth(request):
-    return HttpResponseRedirect('https://accounts.spotify.com/authorize?client_id=420e781f275641c39c09ee6ca9f94275&response_type=code&redirect_uri=https%3A%2F%2Fd9c5bee6.ngrok.io%2Fspotify%2Fcode')
+    return HttpResponseRedirect('https://accounts.spotify.com/authorize?client_id=420e781f275641c39c09ee6ca9f94275&response_type=code&redirect_uri=https://83bdc11b.ngrok.io/spotify/code/')
 
 def code(request):
     code = request.GET.get('code', '')
@@ -19,11 +19,12 @@ def code(request):
     data = {
         'grant_type': 'authorization_code',
         'code': code,
-        'redirect_uri': 'https://d9c5bee6.ngrok.io/spotify/code'
+        'redirect_uri': 'https://83bdc11b.ngrok.io/spotify/code/'
     }
-
     response = requests.post('https://accounts.spotify.com/api/token', headers=headers, data=data)
-    return HttpResponse(response)
+    token = json.loads(response.text).get('access_token', '')
+    refresh = json.loads(response.text).get('refresh_token', '')
+    return HttpResponseRedirect("http://localhost:8080/link?token=" + token + "&refresh=" + refresh)
 
 @csrf_exempt
 def refresh(request):
