@@ -7,7 +7,7 @@ import json
 
 @csrf_exempt
 def auth(request):
-    username = json.loads(request.body).get('email', '')
+    username = json.loads(request.body).get('username', '')
     password = json.loads(request.body).get('password', '')
     client_id = settings.APP_CLIENT_ID
     client_secret = settings.APP_CLIENT_SECRET
@@ -21,4 +21,7 @@ def auth(request):
     }
 
     response = requests.post('http://localhost:8000/o/token/', data=data)
-    return HttpResponse(response)
+    if response.status_code == 400:
+        return HttpResponse(response, status=401)
+        
+    return HttpResponse(response, status=200)
