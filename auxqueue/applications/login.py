@@ -25,3 +25,19 @@ def auth(request):
         return HttpResponse(response, status=401)
         
     return HttpResponse(response, status=200)
+
+@csrf_exempt
+def refresh(request):
+    token = json.loads(request.body).get('token', '')
+    client_id = settings.APP_CLIENT_ID
+    client_secret = settings.APP_CLIENT_SECRET
+
+    data = {
+        'grant_type': 'refresh_token',
+        'refresh_token': token,
+        'client_id': client_id,
+        'client_secret': client_secret
+    }
+
+    response = requests.post('http://localhost:8000/o/token/', data=data)
+    return HttpResponse(response)
