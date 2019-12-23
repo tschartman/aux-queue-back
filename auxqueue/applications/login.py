@@ -28,7 +28,7 @@ def auth(request):
     else:
         return HttpResponse(response)
 
-def exchange(requests):
+def exchange(request):
     code = request.GET.get('code', '')
     headers = {'Authorization': "Basic ".encode("utf-8") + base64.b64encode((settings.APP_CLIENT_ID + ":" + settings.APP_CLIENT_SECRET).encode("utf-8"))}
     data = {
