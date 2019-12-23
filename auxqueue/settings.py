@@ -13,11 +13,6 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 import os
 import django_heroku
 
-
-
-# reading .env file
-environ.Env.read_os.environ.get()
-
 # False if not in os.environ
 DEBUG = os.environ.get('DEBUG')
 
