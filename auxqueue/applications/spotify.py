@@ -5,7 +5,6 @@ from django.shortcuts import redirect
 import requests
 import base64
 import json
-import environ
 from urllib import parse
 from django.conf import settings
 

@@ -3,6 +3,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django import forms
 from django.conf import settings
 import requests
+import requests
 import json
 
 @csrf_exempt
