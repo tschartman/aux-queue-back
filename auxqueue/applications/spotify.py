@@ -23,7 +23,9 @@ def code(request):
     response = requests.post('https://accounts.spotify.com/api/token', headers=headers, data=data)
     token = json.loads(response.text).get('access_token', '')
     refresh = json.loads(response.text).get('refresh_token', '')
-    return redirect("auxqueue.com/link?token=" + token + "&refresh=" + refresh)
+    response = HttpResponse("", status=302)
+    response['Location'] = "auxqueue.com/link?token=" + token + "&refresh=" + refresh
+    return response
 
 @csrf_exempt
 def refresh(request):
