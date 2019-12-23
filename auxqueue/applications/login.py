@@ -29,19 +29,6 @@ def auth(request):
     else:
         return HttpResponse(response)
 
-def exchange(request):
-    code = request.GET.get('code', '')
-    headers = {'Authorization': "Basic ".encode("utf-8") + base64.b64encode((settings.APP_CLIENT_ID + ":" + settings.APP_CLIENT_SECRET).encode("utf-8"))}
-    data = {
-        'grant_type': 'authorization_code',
-        'code': code,
-        'redirect_uri': settings.API_ENDPOINT + '/exchange/'
-    }
-    response = requests.post(settings.API_ENDPOINT + '/o/token/', headers=headers, data=data)
-    token = json.loads(response.text).get('access_token', '')
-    refresh = json.loads(response.text).get('refresh_token', '')
-    return HttpResponse(token + ":" + refresh)
-
 @csrf_exempt
 def refresh(request):
     token = json.loads(request.body).get('token', '')
