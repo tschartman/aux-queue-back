@@ -21,6 +21,7 @@ def auth(request):
     }
 
     response = requests.post(settings.API_ENDPOINT + '/o/token/', data=data)
+    print(response)
     if response.status_code == 400:
         return HttpResponse(response, status=401)
         
