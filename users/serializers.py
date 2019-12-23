@@ -5,8 +5,9 @@ class UsersSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ['email', 'is_staff', 'is_active', 'date_joined']
+        fields = ['email', 'is_staff', 'is_active', 'date_joined', 'password']
         read_only_fields = ['date_joined']
+        write_only_fields = ['password']
 
 class SpotifyAuthSerializer(serializers.ModelSerializer):
 
