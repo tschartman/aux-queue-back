@@ -36,7 +36,7 @@ def exchange(requests):
         'code': code,
         'redirect_uri': settings.API_ENDPOINT + '/exchange/'
     }
-    response = requests.post(settings.API_ENDPOINT + '/o/token', headers=headers, data=data)
+    response = requests.post(settings.API_ENDPOINT + '/o/token/', headers=headers, data=data)
     token = json.loads(response.text).get('access_token', '')
     refresh = json.loads(response.text).get('refresh_token', '')
     return HttpResponse(token + ":" + refresh)
