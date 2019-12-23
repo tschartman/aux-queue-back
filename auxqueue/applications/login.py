@@ -21,11 +21,12 @@ def auth(request):
     }
 
     response = requests.post(settings.API_ENDPOINT + '/o/token/', data=data)
-    print(response)
     if response.status_code == 400:
         return HttpResponse(response, status=401)
-        
-    return HttpResponse(response, status=200)
+    else if response.status_code == 200:
+        return HttpResponse(response, status=200)
+    else:
+        return HttpResponse(response)
 
 @csrf_exempt
 def refresh(request):
