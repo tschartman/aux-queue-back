@@ -14,7 +14,7 @@ def auth(request):
     client_secret = settings.APP_CLIENT_SECRET
 
     data = {
-        'grant_type': 'authorization_code',
+        'grant_type': 'password',
         'username': username,
         'password': password,
         'client_id': client_id,
