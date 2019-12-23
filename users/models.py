@@ -9,12 +9,12 @@ from .managers import CustomUserManager
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(_('email address'), unique=True)
+    username = models.CharField(_('username'), max_length=30, blank=True)
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     date_joined = models.DateTimeField(default=timezone.now)
     access_token = models.CharField(max_length=300, blank=True, null=True)
     refresh_token = models.CharField(max_length=300, blank=True, null=True)
-
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
 

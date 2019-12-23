@@ -57,6 +57,10 @@ INSTALLED_APPS = [
     'rest_framework',
     'users.apps.UsersConfig',
     'oauth2_provider',
+    'django.contrib.sites',
+    'allauth',
+    'allauth.account',
+    'rest_auth.registration',
 ]
 
 MIDDLEWARE = [
