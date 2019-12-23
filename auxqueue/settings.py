@@ -35,6 +35,13 @@ ALLOWED_HOSTS = ['https://auxstack.herokuapp.com/']
 
 AUTH_USER_MODEL = 'users.CustomUser'
 
+REST_AUTH_SERIALIZERS = {
+    "USER_DETAILS_SERIALIZER": "users.serializers.UserSerializer",
+}
+REST_AUTH_REGISTER_SERIALIZERS = {
+    "REGISTER_SERIALIZER": "users.serializers.RegisterSerializer",
+}
+
 # for dev allow origin all
 CORS_ORIGIN_ALLOW_ALL = True
 
