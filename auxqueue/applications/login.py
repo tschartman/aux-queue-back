@@ -20,7 +20,7 @@ def auth(request):
         'client_secret': client_secret
     }
 
-    response = requests.post('http://localhost:8000/o/token/', data=data)
+    response = requests.post(settings.API_ENDPOINT + '/o/token/', data=data)
     if response.status_code == 400:
         return HttpResponse(response, status=401)
         
@@ -39,5 +39,5 @@ def refresh(request):
         'client_secret': client_secret
     }
 
-    response = requests.post('http://localhost:8000/o/token/', data=data)
+    response = requests.post(settings.API_ENDPOINT + '/o/token/', data=data)
     return HttpResponse(response)
