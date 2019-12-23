@@ -39,7 +39,7 @@ SPOTIFY_CLIENT_ID = env('SPOTIFY_CLIENT_ID')
 SPOTIFY_CLIENT_SECRET = env('SPOTIFY_CLIENT_SECRET')
 API_ENDPOINT = env('API_ENDPOINT')
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['https://auxstack.herokuapp.com/']
 
 AUTH_USER_MODEL = 'users.CustomUser'
 
