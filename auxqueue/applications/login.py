@@ -23,7 +23,7 @@ def auth(request):
     response = requests.post(settings.API_ENDPOINT + '/o/token/', data=data)
     if response.status_code == 400:
         return HttpResponse(response, status=401)
-    else if response.status_code == 200:
+    elif response.status_code == 200:
         return HttpResponse(response, status=200)
     else:
         return HttpResponse(response)
