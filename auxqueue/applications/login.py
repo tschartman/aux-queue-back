@@ -13,7 +13,7 @@ def auth(request):
     client_secret = settings.APP_CLIENT_SECRET
 
     data = {
-        'grant_type': 'password',
+        'grant_type': 'authorization_code',
         'username': username,
         'password': password,
         'client_id': client_id,
@@ -27,6 +27,19 @@ def auth(request):
         return HttpResponse(response, status=200)
     else:
         return HttpResponse(response)
+
+def exchange(requests):
+    code = request.GET.get('code', '')
+    headers = {'Authorization': "Basic ".encode("utf-8") + base64.b64encode((settings.APP_CLIENT_ID + ":" + settings.APP_CLIENT_SECRET).encode("utf-8"))}
+    data = {
+        'grant_type': 'authorization_code',
+        'code': code,
+        'redirect_uri': settings.API_ENDPOINT + '/exchange/'
+    }
+    response = requests.post(settings.API_ENDPOINT + '/o/token', headers=headers, data=data)
+    token = json.loads(response.text).get('access_token', '')
+    refresh = json.loads(response.text).get('refresh_token', '')
+    return HttpResponse(token + ":" + refresh)
 
 @csrf_exempt
 def refresh(request):

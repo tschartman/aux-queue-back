@@ -21,6 +21,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('o/', include('oauth2_provider.urls')),
     path('login/', login.auth),
+    path('exchange/', login.exchange),
     path('login/refresh/', login.refresh),
     path('', include('users.urls')),
     path('spotify/', spotify.auth),
