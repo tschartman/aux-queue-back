@@ -8,7 +8,7 @@ class RegisterSerializer(RegisterSerializer):
     password1 = serializers.CharField(write_only=True)
 
     def get_cleaned_data(self):
-        super(CustomRegisterSerializer, self).get_cleaned_data()
+        super(RegisterSerializer, self).get_cleaned_data()
 
         return {
             'password1': self.validated_data.get('password1', ''),
