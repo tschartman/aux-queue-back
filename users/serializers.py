@@ -10,7 +10,7 @@ class UsersSerializer(serializers.ModelSerializer):
         read_only_fields = ['date_joined']
 
     def create(self, validate_data):
-        user = super(UserSerializer, self).create(validated_data)
+        user = super(UsersSerializer, self).create(validated_data)
         user.set_password(validated_data['password'])
         user.save()
         return user
