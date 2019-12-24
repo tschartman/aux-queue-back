@@ -9,7 +9,7 @@ class UsersSerializer(serializers.ModelSerializer):
         fields = ['email', 'is_staff', 'is_active', 'date_joined', 'password']
         read_only_fields = ['date_joined']
 
-    def create(self, validate_data):
+    def create(self, validated_data):
         user = super(UsersSerializer, self).create(validated_data)
         user.set_password(validated_data['password'])
         user.save()
