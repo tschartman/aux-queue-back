@@ -39,7 +39,7 @@ AUTH_USER_MODEL = 'users.CustomUser'
 CORS_ORIGIN_ALLOW_ALL = False
 
 CORS_ORIGIN_WHITELIST = [
-    "https://auxqueue.com",
+    "https://auxqueue.com/*",
 ]
 
 # Application definition
