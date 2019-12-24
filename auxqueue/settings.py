@@ -36,11 +36,7 @@ ALLOWED_HOSTS = ['https://auxstack.herokuapp.com/']
 AUTH_USER_MODEL = 'users.CustomUser'
 
 # for dev allow origin all
-CORS_ORIGIN_ALLOW_ALL = False
-
-CORS_ORIGIN_WHITELIST = [
-    "https://auxqueue.com/*",
-]
+CORS_ORIGIN_ALLOW_ALL = True
 
 # Application definition
 
