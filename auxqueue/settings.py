@@ -33,23 +33,7 @@ API_ENDPOINT = os.environ.get('API_ENDPOINT')
 
 ALLOWED_HOSTS = ['https://auxstack.herokuapp.com/']
 
-ACCOUNT_USER_MODEL_USERNAME_FIELD = None
-ACCOUNT_AUTHENTICATION_METHOD = 'email'
-
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_UNIQUE_EMAIL = True
-ACCOUNT_USERNAME_REQUIRED = False
-ACCOUNT_USER_EMAIL_FIELD = 'email'
-ACCOUNT_LOGOUT_ON_GET = True
-
 AUTH_USER_MODEL = 'users.CustomUser'
-
-REST_AUTH_SERIALIZERS = {
-    "USER_DETAILS_SERIALIZER": "users.serializers.UsersSerializer",
-}
-REST_AUTH_REGISTER_SERIALIZERS = {
-    "REGISTER_SERIALIZER": "users.serializers.RegisterSerializer",
-}
 
 # for dev allow origin all
 CORS_ORIGIN_ALLOW_ALL = True
@@ -66,10 +50,6 @@ INSTALLED_APPS = [
     'rest_framework',
     'users.apps.UsersConfig',
     'oauth2_provider',
-    'django.contrib.sites',
-    'allauth',
-    'allauth.account',
-    'rest_auth.registration',
 ]
 
 MIDDLEWARE = [

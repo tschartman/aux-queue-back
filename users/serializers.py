@@ -1,19 +1,5 @@
 from rest_framework import serializers
-from rest_auth.registration.serializers import RegisterSerializer
 from users.models import CustomUser
-
-
-class RegisterSerializer(RegisterSerializer):
-    email = serializers.EmailField(required=True)
-    password1 = serializers.CharField(write_only=True)
-
-    def get_cleaned_data(self):
-        super(RegisterSerializer, self).get_cleaned_data()
-
-        return {
-            'password1': self.validated_data.get('password1', ''),
-            'email': self.validated_data.get('email', ''),
-        }
 
 class UsersSerializer(serializers.ModelSerializer):
 
