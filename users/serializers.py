@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from users.models import CustomUser
 
-class UsersSerializer(serializers.HyperlinkedModelSerializer):
+class UsersSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
     #friends = serializers.HyperlinkedRelatedField(many=True, view_name='friend-detail', read_only=True)
 
