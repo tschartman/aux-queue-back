@@ -27,7 +27,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
 class Friendship(models.Model):
     creator = models.ForeignKey(CustomUser, related_name="friendship_creator")
-    friend = models.ForeignKey(CustomUser, related_name='friends')
+    friend = models.ForeignKey(CustomUser, related_name='friends', on_delete=models.CASCADE)
     accepted = models.BooleanField(default=False)
     blocked = models.BooleanField(default=False)
     permissions = models.CharField(max_length=300, blank=True, null=True)
