@@ -1,5 +1,5 @@
-from users.serializers import UsersSerializer, SpotifyAuthSerializer, FreindSerializer
-from users.models import CustomUser, Friend
+from users.serializers import UsersSerializer, SpotifyAuthSerializer
+from users.models import CustomUser
 from rest_framework import viewsets
 from users.permissions import IsAuthenticatedOrCreate, IsUser, IsRelation
 from rest_framework import generics
@@ -24,15 +24,15 @@ class SpotifyAuthDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = SpotifyAuthSerializer
     permission_classes = (IsUser,)
 
-class FreindViewSet(viewsets.ModelViewSet):
-    query_set = Item.objects.all()
-    serializer_class = FreindSerializer
-    permission_classes = [permissions.IsRelation]
+# class FreindViewSet(viewsets.ModelViewSet):
+#     query_set = Item.objects.all()
+#     serializer_class = FreindSerializer
+#     permission_classes = [permissions.IsRelation]
 
-    def get_queryset(self):
-        queryset = self.queryset
-        return query_set
+#     def get_queryset(self):
+#         queryset = self.queryset
+#         return query_set
 
-    @action(detail=True, renderer_classes=[renderers.StaticHTMLRenderer])
-    def perform_create(self, serializer):
-        serializer.save(friend_one=self.request.user)
+#     @action(detail=True, renderer_classes=[renderers.StaticHTMLRenderer])
+#     def perform_create(self, serializer):
+#         serializer.save(friend_one=self.request.user)

@@ -4,7 +4,7 @@ from users import views
 
 router = DefaultRouter()
 router.register(r'users', views.UserViewset, basename='users')
-router.register(r'friends', views.FriendViewset, basename='friends')
+#router.register(r'friends', views.FriendViewset, basename='friends')
 
 urlpatterns = [
     path('', include(router.urls)),
