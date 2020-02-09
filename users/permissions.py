@@ -9,3 +9,7 @@ class IsAuthenticatedOrCreate(permissions.IsAuthenticated):
 class IsUser(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         return obj.id == request.user.id
+
+class IsRelation(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        return obj.freind_one == request.user or obj.freind_two == request.user 

@@ -1,12 +1,13 @@
 from rest_framework import serializers
-from users.models import CustomUser
+from users.models import CustomUser, Friend
 
-class UsersSerializer(serializers.ModelSerializer):
+class UsersSerializer(serializers.HyperlinkedModelSerializer):
     password = serializers.CharField(write_only=True)
+    friends = serializers.HyperlinkedRelatedField(many=True, view_name='friend-detail', read_only=True)
 
     class Meta:
         model = CustomUser
-        fields = ['email', 'first_name', 'last_name', 'is_staff', 'is_active', 'date_joined', 'id', 'password']
+        fields = ['email', 'first_name', 'last_name', 'is_staff', 'is_active', 'freinds', 'date_joined', 'url', 'id', 'password']
         read_only_fields = ['date_joined']
 
     def create(self, validated_data):
@@ -20,3 +21,10 @@ class SpotifyAuthSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = ['access_token', 'refresh_token']
+
+class FreindSerializer(serializers.HyperlinkedModelSerializer):
+    freind_one = serializers.ReadOnlyField(source='owner.email')
+
+        class Meta:
+            model = Friend
+            fields = ('url', 'id', 'freind_one', 'friend_two', 'accepted', 'blocked', 'permissions')

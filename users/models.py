@@ -24,3 +24,12 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.email
+
+class Friend(models.Model):
+    friend_one = models.ForeignKey(CustomUser, related_name='friends', on_delete=models.CASCADE)
+    friend_two = models.ForeignKey(CustomUser, related_name='friends', on_delete=models.CASCADE)
+    accepted = models.BooleanField(default=False)
+    blocked = models.BooleanField(default=False)
+    permissions = models.CharField(max_length=300, blank=True, null=True)
+    
+
