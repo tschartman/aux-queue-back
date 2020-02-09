@@ -23,8 +23,8 @@ class SpotifyAuthSerializer(serializers.ModelSerializer):
         fields = ['access_token', 'refresh_token']
 
 class FreindSerializer(serializers.HyperlinkedModelSerializer):
-    freind_one = serializers.ReadOnlyField(source='owner.email')
+    creator = serializers.ReadOnlyField(source='owner.email')
 
         class Meta:
             model = Friend
-            fields = ('url', 'id', 'freind_one', 'friend_two', 'accepted', 'blocked', 'permissions')
+            fields = ('url', 'id', 'creator', 'friend', 'accepted', 'blocked', 'permissions')

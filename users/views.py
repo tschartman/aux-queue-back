@@ -31,7 +31,6 @@ class FreindViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = self.queryset
-        query_set = queryset.filter(friend_one=request.user or friend_two=request.user)
         return query_set
 
     @action(detail=True, renderer_classes=[renderers.StaticHTMLRenderer])
