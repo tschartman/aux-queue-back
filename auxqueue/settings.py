@@ -24,8 +24,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'ny#n074l43$g3rqom+99w_89g5x2e6-3mbs!*_$lg95^+0d='
-#SECRET_KEY = os.environ.get('SECRET_KEY')
+SECRET_KEY = os.environ.get('SECRET_KEY')
 APP_CLIENT_ID = os.environ.get('APP_CLIENT_ID')
 APP_CLIENT_SECRET = os.environ.get('APP_CLIENT_SECRET')
 SPOTIFY_CLIENT_ID = os.environ.get('SPOTIFY_CLIENT_ID')
