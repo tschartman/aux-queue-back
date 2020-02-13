@@ -14,7 +14,7 @@ import os
 import django_heroku
 
 # False if not in os.environ
-DEBUG = os.environ.get('DEBUG')
+DEBUG =  True#os.environ.get('DEBUG')
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -24,15 +24,15 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-#SECRET_KEY = 'ny#n074l43$g3rqom+99w_89g5x2e6-3mbs!*_$lg95^+0d='
-SECRET_KEY = os.environ.get('SECRET_KEY')
+SECRET_KEY = 'ny#n074l43$g3rqom+99w_89g5x2e6-3mbs!*_$lg95^+0d='
+#SECRET_KEY = os.environ.get('SECRET_KEY')
 APP_CLIENT_ID = os.environ.get('APP_CLIENT_ID')
 APP_CLIENT_SECRET = os.environ.get('APP_CLIENT_SECRET')
 SPOTIFY_CLIENT_ID = os.environ.get('SPOTIFY_CLIENT_ID')
 SPOTIFY_CLIENT_SECRET = os.environ.get('SPOTIFY_CLIENT_SECRET')
 API_ENDPOINT = os.environ.get('API_ENDPOINT')
 
-ALLOWED_HOSTS = ['https://auxstack.herokuapp.com/']
+ALLOWED_HOSTS = ['https://auxstack.herokuapp.com/', 'http://localhost:8000']
 
 AUTH_USER_MODEL = 'users.CustomUser'
 
@@ -42,6 +42,7 @@ CORS_ORIGIN_ALLOW_ALL = True
 # Application definition
 
 INSTALLED_APPS = [
+    'graphene_django',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -52,6 +53,10 @@ INSTALLED_APPS = [
     'users.apps.UsersConfig',
     'oauth2_provider',
 ]
+
+GRAPHENE = {
+    'SCHEMA': 'auxqueue.schema.schema'
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

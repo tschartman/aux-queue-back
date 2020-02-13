@@ -3,7 +3,6 @@ from users.models import CustomUser
 
 class UsersSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
-    #friends = serializers.HyperlinkedRelatedField(many=True, view_name='friend-detail', read_only=True)
 
     class Meta:
         model = CustomUser
@@ -22,9 +21,3 @@ class SpotifyAuthSerializer(serializers.ModelSerializer):
         model = CustomUser
         fields = ['access_token', 'refresh_token']
 
-# class FreindSerializer(serializers.HyperlinkedModelSerializer):
-#     creator = serializers.ReadOnlyField(source='owner.email')
-
-#         class Meta:
-#             model = Friend
-#             fields = ('url', 'id', 'creator', 'friend', 'accepted', 'blocked', 'permissions')

@@ -3,6 +3,7 @@ from django.contrib.auth.models import AbstractBaseUser
 from django.contrib.auth.models import PermissionsMixin
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
+from auxqueue import settings
 
 from .managers import CustomUserManager
 
@@ -25,11 +26,13 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.email
 
-# class Friendship(models.Model):
-#     creator = models.ForeignKey(CustomUser, related_name="friendship_creator" on_delete=models.CASCADE)
-#     friend = models.ForeignKey(CustomUser, related_name='friends', on_delete=models.CASCADE)
-#     accepted = models.BooleanField(default=False)
-#     blocked = models.BooleanField(default=False)
-#     permissions = models.CharField(max_length=300, blank=True, null=True)
+class Friendship(models.Model):
+    user_one = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='user_one', on_delete=models.CASCADE)
+    user_two = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='user_two', on_delete=models.CASCADE)
+    status = models.SmallIntegerField(default=0)
+    action_user_id = models.SmallIntegerField(default=0)
+    permissions = models.CharField(max_length=300, blank=True, null=True)
     
+    class Meta:
+        unique_together = ('user_one', 'user_two',)
 

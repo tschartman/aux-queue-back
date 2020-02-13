@@ -15,6 +15,8 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from graphene_django.views import GraphQLView
+from auxqueue.schema import schema
 from auxqueue.applications import spotify, login
 
 urlpatterns = [
@@ -22,6 +24,7 @@ urlpatterns = [
     path('o/', include('oauth2_provider.urls')),
     path('login/', login.auth),
     path('login/refresh/', login.refresh),
+    path('graphql/', GraphQLView.as_view(graphiql=True)),
     path('', include('users.urls')),
     path('spotify/', spotify.auth),
     path('spotify/code/', spotify.code),
