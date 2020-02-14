@@ -14,7 +14,7 @@ import os
 import django_heroku
 
 # False if not in os.environ
-DEBUG =  True#os.environ.get('DEBUG')
+os.environ.get('DEBUG')
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -24,7 +24,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY')
+#SECRET_KEY = os.environ.get('SECRET_KEY')
 APP_CLIENT_ID = os.environ.get('APP_CLIENT_ID')
 APP_CLIENT_SECRET = os.environ.get('APP_CLIENT_SECRET')
 SPOTIFY_CLIENT_ID = os.environ.get('SPOTIFY_CLIENT_ID')
