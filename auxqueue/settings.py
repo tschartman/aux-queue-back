@@ -14,7 +14,7 @@ import os
 import django_heroku
 
 # False if not in os.environ
-os.environ.get('DEBUG')
+DEBUG =  True#os.environ.get('DEBUG')
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -24,6 +24,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = 'ny#n074l43$g3rqom+99w_89g5x2e6-3mbs!*_$lg95^+0d='
 #SECRET_KEY = os.environ.get('SECRET_KEY')
 APP_CLIENT_ID = os.environ.get('APP_CLIENT_ID')
 APP_CLIENT_SECRET = os.environ.get('APP_CLIENT_SECRET')
@@ -50,11 +51,15 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'users.apps.UsersConfig',
+    'friends.apps.FriendsConfig',
     'oauth2_provider',
 ]
 
 GRAPHENE = {
-    'SCHEMA': 'auxqueue.schema.schema'
+    'SCHEMA': 'auxqueue.schema.schema',
+    'MIDDLEWARE': [
+        'graphql_jwt.middleware.JSONWebTokenMiddleware', 
+    ]
 }
 
 MIDDLEWARE = [
@@ -66,6 +71,12 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+]
+
+AUTHENTICATION_BACKENDS = [
+    'graphql_jwt.backends.JSONWebTokenBackend',
+    'django.contrib.auth.backends.ModelBackend',
 ]
 
 ROOT_URLCONF = 'auxqueue.urls'
@@ -124,7 +135,6 @@ OAUTH2_PROVIDER = {
 
 REST_FRAMEWORK = {
     # ...
-
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     )
