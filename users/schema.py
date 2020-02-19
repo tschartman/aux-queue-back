@@ -32,6 +32,10 @@ class UserInput(graphene.InputObjectType):
     lastName = graphene.String()
     email = graphene.String()
 
+class TokenInput(graphene.InputObjectType):
+    accessToken = graphene.String()
+    refreshToken = graphene.String()
+
 
 class UpdateUser(graphene.Mutation):
     class Arguments:
@@ -41,7 +45,7 @@ class UpdateUser(graphene.Mutation):
     user = graphene.Field(CustomUserType)
 
     @staticmethod
-    def mutate(root, info, id, input=None):
+    def mutate(root, info, input=None):
         ok = False
         user_instance = info.context.user
         if user_instance:
@@ -53,7 +57,27 @@ class UpdateUser(graphene.Mutation):
             return UpdateUser(ok=ok, user=user_instance)
         return UpdateUser(ok=ok, user=None)
 
+class UpdateTokens(graphene.Mutation):
+    class Arguments:
+        input = TokenInput(required=True)
+
+    ok = graphene.Boolean()
+    user = graphene.Field(CustomUserType)
+
+    @staticmethod
+    def mutate(root, info, input=None):
+        ok = False
+        user_instance = info.context.user
+        if user_instance:
+            ok = True
+            user_instance.access_token = input.accessToken
+            user_instance.refresh_token = input.refreshToken
+            user_instance.save()
+            return UpdateTokens(ok=ok, user=user_instance)
+        return UpdateTokens(ok=ok, user=None)
+
 class Mutation(graphene.ObjectType):
     update_user = UpdateUser.Field()
+    update_tokens = UpdateTokens.Field()
 
 schema = graphene.Schema(query=Query, mutation=Mutation)
