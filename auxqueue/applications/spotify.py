@@ -36,3 +36,14 @@ def refresh(request):
 
     response = requests.post('https://accounts.spotify.com/api/token', headers=headers, data = data)
     return HttpResponse(response)
+
+class SpotfyMiddleware:
+    def refresh(token):
+        headers = {'Authorization': "Basic ".encode("utf-8") + base64.b64encode((settings.SPOTIFY_CLIENT_ID + ":" + settings.SPOTIFY_CLIENT_SECRET).encode("utf-8"))}
+        data = {
+            'grant_type': 'refresh_token',
+            'refresh_token': token
+        }
+
+        response = requests.post('https://accounts.spotify.com/api/token', headers=headers, data = data)
+        return json.loads(response.text).get('access_token')

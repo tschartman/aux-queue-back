@@ -12,25 +12,37 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 
 import os
 import django_heroku
-
+import environ
+env = environ.Env(
+    # set casting, default value
+    DEBUG=(bool, False)
+)
 # False if not in os.environ
-DEBUG =  True#os.environ.get('DEBUG')
+DEBUG = env('DEBUG')
+#os.environ.get('DEBUG')
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+environ.Env.read_env()
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'ny#n074l43$g3rqom+99w_89g5x2e6-3mbs!*_$lg95^+0d='
-#SECRET_KEY = os.environ.get('SECRET_KEY')
-APP_CLIENT_ID = os.environ.get('APP_CLIENT_ID')
-APP_CLIENT_SECRET = os.environ.get('APP_CLIENT_SECRET')
-SPOTIFY_CLIENT_ID = os.environ.get('SPOTIFY_CLIENT_ID')
-SPOTIFY_CLIENT_SECRET = os.environ.get('SPOTIFY_CLIENT_SECRET')
-API_ENDPOINT = os.environ.get('API_ENDPOINT')
+# SECRET_KEY = os.environ.get('SECRET_KEY')
+# APP_CLIENT_ID = os.environ.get('APP_CLIENT_ID')
+# APP_CLIENT_SECRET = os.environ.get('APP_CLIENT_SECRET')
+# SPOTIFY_CLIENT_ID = os.environ.get('SPOTIFY_CLIENT_ID')
+# SPOTIFY_CLIENT_SECRET = os.environ.get('SPOTIFY_CLIENT_SECRET')
+# API_ENDPOINT = os.environ.get('API_ENDPOINT')
+
+SECRET_KEY = env('SECRET_KEY')
+APP_CLIENT_ID = env('APP_CLIENT_ID')
+APP_CLIENT_SECRET = env('APP_CLIENT_SECRET')
+SPOTIFY_CLIENT_ID = env('SPOTIFY_CLIENT_ID')
+SPOTIFY_CLIENT_SECRET = env('SPOTIFY_CLIENT_SECRET')
+API_ENDPOINT = env('API_ENDPOINT')
 
 ALLOWED_HOSTS = ['https://auxstack.herokuapp.com/', 'http://localhost:8000']
 
