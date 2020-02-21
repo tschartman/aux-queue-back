@@ -9,6 +9,7 @@ from .managers import CustomUserManager
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(_('email address'), unique=True)
+    user_name = models.CharField(max_length=20, unique=True)
     first_name = models.CharField(max_length=20, blank=True, null=True)
     last_name = models.CharField(max_length=20, blank=True, null=True)
     is_staff = models.BooleanField(default=False)
@@ -18,7 +19,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     refresh_token = models.CharField(max_length=300, blank=True, null=True)
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['first_name', 'last_name']
+    REQUIRED_FIELDS = ['first_name', 'last_name', 'user_name']
 
     objects = CustomUserManager()
 

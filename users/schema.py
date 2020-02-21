@@ -27,10 +27,9 @@ class Query(ObjectType):
         return CustomUser.objects.all()
 
 class UserInput(graphene.InputObjectType):
-    id = graphene.ID()
     firstName = graphene.String()
     lastName = graphene.String()
-    email = graphene.String()
+    userName = graphene.String()
 
 class TokenInput(graphene.InputObjectType):
     accessToken = graphene.String()
@@ -52,7 +51,7 @@ class UpdateUser(graphene.Mutation):
             ok = True
             user_instance.first_name = input.firstName
             user_instance.last_name = input.lastName
-            user_instance.email = input.email
+            user_instance.user_name = input.userName
             user_instance.save()
             return UpdateUser(ok=ok, user=user_instance)
         return UpdateUser(ok=ok, user=None)

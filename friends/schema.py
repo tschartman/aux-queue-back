@@ -14,13 +14,13 @@ class FriendshipType(DjangoObjectType):
         model = Friendship
 
 class Query(ObjectType):
-    friend = graphene.Field(FriendshipType, email=graphene.String())
+    friend = graphene.Field(FriendshipType, userName=graphene.String())
     friends = graphene.List(FriendshipType,)
 
     def resolve_friend(self, info, **kwargs):
-        email = kwargs.get('email')
+        userName = kwargs.get('userName')
         user_one = info.context.user
-        user_two = CustomUser.objects.get(email=email)
+        user_two = CustomUser.objects.get(userName=userName)
         return Friendship.objects.get(Q(user_one = user_one, user_two = user_two, status = 1) | Q(user_two = user_one, user_one = user_two, status = 1) )
 
     def resolve_friends(self, info, **kwargs):
@@ -29,7 +29,7 @@ class Query(ObjectType):
 
 class FriendInput(graphene.InputObjectType):
     id = graphene.ID()
-    email = graphene.String()
+    userName = graphene.String()
     user_one = graphene.Field(UserInput)
     user_two = graphene.Field(UserInput)
     status = graphene.String()
@@ -46,7 +46,7 @@ class AcceptFriendRequest(graphene.Mutation):
     def mutate(root, info, input=None):
         ok = False
         user_two = info.context.user
-        user_one = CustomUser.objects.get(email=input.email)
+        user_one = CustomUser.objects.get(userName=input.userName)
         friendship_instance = Friendship.objects.get(Q(user_one = user_one, user_two = user_two, status = 0))
         if friendship_instance:
             ok = True
@@ -66,7 +66,7 @@ class UpdateFriendRequest(graphene.Mutation):
     def mutate(root, info, input=None):
         ok = False
         user_two = info.context.user
-        user_one = CustomUser.objects.get(email=input.email)
+        user_one = CustomUser.objects.get(userName=input.userName)
         friendship_instance = Friendship.objects.get(Q(user_one = user_one, user_two = user_two, status = 1) | Q(user_two = user_one, user_one = user_two, status = 1) )
         if friendship_instance:
             ok = True
@@ -86,7 +86,7 @@ class UnblockFriendRequest(graphene.Mutation):
     def mutate(root, info, input=None):
         ok = False
         user_two = info.context.user
-        user_one = CustomUser.objects.get(email=input.email)
+        user_one = CustomUser.objects.get(userName=input.userName)
         friendship_instance = Friendship.objects.get(Q(user_one = user_one, user_two = user_two, action_user_id = user_two.id) | Q(user_two = user_one, user_one = user_two, action_user_id = user_two.id) )
         if friendship_instance:
             ok = True
@@ -106,7 +106,7 @@ class SendFriendRequest(graphene.Mutation):
     def mutate(root, info, input=None):
         ok = True
         user_one = info.context.user
-        user_two = CustomUser.objects.get(email=input.email)
+        user_two = CustomUser.objects.get(userName=input.userName)
         if user_one is None or user_two is None:
             return SendFriendRequest(ok=False, friendship=None)
         friendship_instance = Friendship(
