@@ -40,6 +40,7 @@ class UserCreationInput(graphene.InputObjectType):
     firstName = graphene.String()
     lastName = graphene.String()
     email = graphene.String()
+    password = graphene.String()
 
 class TokenInput(graphene.InputObjectType):
     accessToken = graphene.String()
@@ -61,6 +62,7 @@ class CreateUser(graphene.Mutation):
             email = input.email,
             user_name = Generator.generate_username()
         )
+        user_instance.set_password(input.password)
         user_instance.save()
         return CreateUser(ok=ok, user=user_instance)
 
