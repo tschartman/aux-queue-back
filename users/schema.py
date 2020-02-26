@@ -34,7 +34,7 @@ class Query(ObjectType):
 class UserInput(graphene.InputObjectType):
     firstName = graphene.String()
     lastName = graphene.String()
-    userName = graphene.String()
+    email = graphene.String()
 
 class UserCreationInput(graphene.InputObjectType):
     firstName = graphene.String()
@@ -81,7 +81,7 @@ class UpdateUser(graphene.Mutation):
             ok = True
             user_instance.first_name = input.firstName
             user_instance.last_name = input.lastName
-            user_instance.user_name = input.userName
+            user_instance.email = input.email
             user_instance.save()
             return UpdateUser(ok=ok, user=user_instance)
         return UpdateUser(ok=ok, user=None)
