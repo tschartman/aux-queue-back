@@ -20,6 +20,7 @@ class CustomUsersType(DjangoObjectType):
 class Query(ObjectType):
     user = graphene.Field(CustomUserType,)
     users = graphene.List(CustomUsersType,)
+    userName = graphene.String()
 
     def resolve_user(self, info, **kwargs):
         user = info.context.user
@@ -31,6 +32,11 @@ class Query(ObjectType):
     def resolve_users(self, info, **kwargs):
         return CustomUser.objects.all()
 
+    def resolve_userName(self, info, **kwargs):
+        userName = Generator.generate_username() 
+        return userName
+
+
 class UserInput(graphene.InputObjectType):
     firstName = graphene.String()
     lastName = graphene.String()
@@ -41,6 +47,9 @@ class UserCreationInput(graphene.InputObjectType):
     lastName = graphene.String()
     email = graphene.String()
     password = graphene.String()
+
+class CheckUsernameInput(graphene.InputObjectType):
+    userName = graphene.String()
 
 class TokenInput(graphene.InputObjectType):
     accessToken = graphene.String()
@@ -65,6 +74,19 @@ class CreateUser(graphene.Mutation):
         user_instance.set_password(input.password)
         user_instance.save()
         return CreateUser(ok=ok, user=user_instance)
+
+class CheckUserName(graphene.Mutation):
+    class Arguments:
+        input = CheckUsernameInput(required=True)
+
+    ok = graphene.Boolean()
+
+    @staticmethod
+    def mutate(root, info, input=None):
+        users = CustomUser.objects.filter(user_name=input.userName)
+        if len(users) == 0:
+            return CheckUserName(ok=True)
+        return CheckUserName(ok = False)
 
 class UpdateUser(graphene.Mutation):
     class Arguments:
@@ -126,6 +148,7 @@ class Mutation(graphene.ObjectType):
     create_user = CreateUser.Field()
     update_user = UpdateUser.Field()
     update_tokens = UpdateTokens.Field()
+    check_user_name = CheckUserName.Field()
     refresh_tokens = RefreshTokens.Field()
 
 schema = graphene.Schema(query=Query, mutation=Mutation)
