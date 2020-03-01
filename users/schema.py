@@ -51,6 +51,10 @@ class UserCreationInput(graphene.InputObjectType):
 class CheckUsernameInput(graphene.InputObjectType):
     userName = graphene.String()
 
+class ChangePasswordInput(graphene.InputObjectType):
+    oldPass = graphene.String()
+    newPass = graphene.String()
+
 class TokenInput(graphene.InputObjectType):
     accessToken = graphene.String()
     refreshToken = graphene.String()
@@ -108,6 +112,42 @@ class UpdateUser(graphene.Mutation):
             return UpdateUser(ok=ok, user=user_instance)
         return UpdateUser(ok=ok, user=None)
 
+class UpdateUserName(graphene.Mutation):
+    class Arguments:
+        input = CheckUsernameInput(required=True)
+    ok = graphene.Boolean()
+    userName = graphene.String()
+
+    @staticmethod
+    def mutate(root, info, input=None):
+        ok = False
+        unique = (len(CustomUser.objects.filter(user_name=input.userName)) == 0)
+        user_instance = info.context.user
+        if user_instance and unique:
+            print(user_instance.user_name)
+            ok = True
+            user_instance.user_name = input.userName
+            user_instance.save()
+            return UpdateUserName(ok=ok, userName=user_instance.user_name)
+        return UpdateUserName(ok=ok, userName=None)
+
+class UpdatePassword(graphene.Mutation):
+    class Arguments:
+        input = ChangePasswordInput(required=True)
+    ok = graphene.Boolean()
+    error = graphene.String()
+    @staticmethod
+    def mutate(root, info, input=None):
+        ok = False
+        user_instance = info.context.user
+        if user_instance:
+            if user_instance.check_password(input.oldPass):
+                user_instance.set_password(input.newPass)
+                user_instance.save()
+                return UpdatePassword(ok=True, error=None)
+            return UpdatePassword(ok=False, error="Old Password Incorrect")
+        return UpdatePassword(ok=False, error="Error Updating Password")
+
 class UpdateTokens(graphene.Mutation):
     class Arguments:
         input = TokenInput(required=True)
@@ -147,6 +187,8 @@ class RefreshTokens(graphene.Mutation):
 class Mutation(graphene.ObjectType):
     create_user = CreateUser.Field()
     update_user = UpdateUser.Field()
+    update_user_name = UpdateUserName.Field()
+    update_password = UpdatePassword.Field()
     update_tokens = UpdateTokens.Field()
     check_user_name = CheckUserName.Field()
     refresh_tokens = RefreshTokens.Field()
