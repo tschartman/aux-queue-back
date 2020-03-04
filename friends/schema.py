@@ -6,7 +6,6 @@ from friends.models import Friendship
 from django.db.models import Q
 from rest_framework.permissions import AllowAny
 from rest_framework import permissions
-from users.schema import UserInput
 
 
 class FriendshipType(DjangoObjectType):
@@ -18,20 +17,32 @@ class Query(ObjectType):
     friends = graphene.List(FriendshipType,)
 
     def resolve_friend(self, info, **kwargs):
-        userName = kwargs.get('userName')
+        userName = kwargs.get('user_name')
         user_one = info.context.user
         user_two = CustomUser.objects.get(user_name=userName)
-        return Friendship.objects.get(Q(user_one = user_one, user_two = user_two, status = 1) | Q(user_two = user_one, user_one = user_two, status = 1) )
+        try:
+            return Friendship.objects.get(Q(user_one = user_one, user_two = user_two, status = 1) | Q(user_two = user_one, user_one = user_two, status = 1) )
+        except:
+            return None
 
     def resolve_friends(self, info, **kwargs):
         user = info.context.user
         return Friendship.objects.filter(Q(user_one = user) | Q(user_two = user))
 
+
+class FriendUserInput(graphene.InputObjectType):
+    userName = graphene.String()
+    email = graphene.String()
+    firstName = graphene.String()
+    lastName = graphene.String()
+    accessToken = graphene.String()
+    refreshToken = graphene.String()
+
 class FriendInput(graphene.InputObjectType):
     id = graphene.ID()
     userName = graphene.String()
-    user_one = graphene.Field(UserInput)
-    user_two = graphene.Field(UserInput)
+    user_one = graphene.Field(FriendUserInput)
+    user_two = graphene.Field(FriendUserInput)
     status = graphene.String()
     permissions = graphene.String()
     actionId = graphene.Int()

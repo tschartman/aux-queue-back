@@ -15,7 +15,7 @@ class CustomUserType(DjangoObjectType):
 class CustomUsersType(DjangoObjectType):
     class Meta:
         model = CustomUser
-        fields = ("user_name", "email", "first_name")
+        fields = ("first_name", "last_name", "user_name", "email", "access_token", "refresh_token",)
 
 class Query(ObjectType):
     user = graphene.Field(CustomUserType,)
