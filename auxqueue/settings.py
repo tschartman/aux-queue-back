@@ -63,7 +63,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'users.apps.UsersConfig',
-    'friends.apps.FriendsConfig',
+    'followers.apps.FollowersConfig',
     'oauth2_provider',
 ]
 

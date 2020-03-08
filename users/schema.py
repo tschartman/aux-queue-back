@@ -1,4 +1,5 @@
 import graphene
+import hashlib
 from graphql_jwt.decorators import login_required
 from graphene_django.types import DjangoObjectType, ObjectType
 from users.models import CustomUser
@@ -11,11 +12,11 @@ from auxqueue.applications.spotify import SpotfyMiddleware
 class CustomUserType(DjangoObjectType):
     class Meta:
         model = CustomUser
-        fields = ("first_name", "last_name", "user_name", "email", "access_token", "refresh_token",)
+        fields = ("first_name", "last_name", "user_name", "user_image", "email", "access_token", "refresh_token",)
 class CustomUsersType(DjangoObjectType):
     class Meta:
         model = CustomUser
-        fields = ("first_name", "last_name", "user_name", "email", "access_token", "refresh_token",)
+        fields = ("first_name", "last_name", "user_name", "user_image", "email", "access_token", "refresh_token",)
 
 class Query(ObjectType):
     user = graphene.Field(CustomUserType,)
@@ -69,11 +70,14 @@ class CreateUser(graphene.Mutation):
     @staticmethod
     def mutate(root, info, input=None):
         ok = True
+        url = 'https://secure.gravatar.com/avatar'
+        email_hash = hashlib.md5(input.email.encode('utf-8')).hexdigest()
         user_instance = CustomUser(
             first_name = input.firstName,
             last_name = input.lastName,
             email = input.email,
-            user_name = Generator.generate_username()
+            user_name = Generator.generate_username(),
+            user_image = '{url}/{hash}'.format(url=url, hash=email_hash)
         )
         user_instance.set_password(input.password)
         user_instance.save()
