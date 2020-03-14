@@ -6,7 +6,6 @@ from users.models import CustomUser
 from django.db.models import Q
 from rest_framework.permissions import AllowAny
 from rest_framework import permissions
-from auxqueue.applications.username_generator import Generator
 from auxqueue.applications.spotify import SpotfyMiddleware
 
 class CustomUserType(DjangoObjectType):
@@ -46,6 +45,7 @@ class UserInput(graphene.InputObjectType):
 class UserCreationInput(graphene.InputObjectType):
     firstName = graphene.String()
     lastName = graphene.String()
+    userName = graphene.String()
     email = graphene.String()
     password = graphene.String()
 
@@ -66,22 +66,24 @@ class CreateUser(graphene.Mutation):
     
     ok = graphene.Boolean()
     user = graphene.Field(CustomUserType)
-    userName = graphene.String()
     @staticmethod
     def mutate(root, info, input=None):
         ok = True
         url = 'https://secure.gravatar.com/avatar'
         email_hash = hashlib.md5(input.email.encode('utf-8')).hexdigest()
-        user_instance = CustomUser(
-            first_name = input.firstName,
-            last_name = input.lastName,
-            email = input.email,
-            user_name = Generator.generate_username(),
-            user_image = '{url}/{hash}'.format(url=url, hash=email_hash)
-        )
-        user_instance.set_password(input.password)
-        user_instance.save()
-        return CreateUser(ok=ok, user=user_instance)
+        unique = (len(CustomUser.objects.filter(user_name=input.userName)) == 0)
+        if unique:
+            user_instance = CustomUser(
+                email = input.email,
+                user_name = input.userName,
+                first_name = input.firstName,
+                last_name = input.lastName,
+                user_image = '{url}/{hash}'.format(url=url, hash=email_hash)
+            )
+            user_instance.set_password(input.password)
+            user_instance.save()
+            return CreateUser(ok=ok, user=user_instance)
+        return CreateUser(ok=False, user=None)
 
 class CheckUserName(graphene.Mutation):
     class Arguments:
