@@ -10,3 +10,5 @@ class Relationship(models.Model):
     action_user_id = models.SmallIntegerField(default=0)
     permissions = models.CharField(max_length=300, blank=True, null=True)
 
+    class Meta:
+        unique_together = ('following', 'follower')
