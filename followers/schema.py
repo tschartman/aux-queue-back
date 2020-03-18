@@ -75,14 +75,14 @@ class UpdateFollowRequest(graphene.Mutation):
         ok = False
         following = info.context.user
         follower = CustomUser.objects.get(user_name=input.userName)
-        Relationship_instance = Relationship.objects.get(following=following, follower=following, status = 0)
+        Relationship_instance = Relationship.objects.get(following=following, follower=follower, status = 0)
         if Relationship_instance:
             ok = True
             Relationship_instance.status = ["pending", "accepted", "declined", "blocked"].index(input.status)
             Relationship_instance.action_user_id = info.context.user.id
             Relationship_instance.save()
-            return AcceptFollowRequest(ok=ok, Relationship=Relationship_instance)
-        return AcceptFollowerRequest(ok=ok, Relationship=None)
+            return UpdateFollowRequest(ok=ok, Relationship=Relationship_instance)
+        return UpdateFollowerRequest(ok=ok, Relationship=None)
 
 class RemoveFollowRequest(graphene.Mutation):
     class Arguments:
