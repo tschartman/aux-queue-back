@@ -94,14 +94,14 @@ class RemoveFollowRequest(graphene.Mutation):
         ok = False
         follower = info.context.user
         following = CustomUser.objects.get(user_name=input.userName)
-        Relationship_instance = Relationship.objects.get(Q(follower = follower, following = following, status = 1))
+        Relationship_instance = Relationship.objects.get(follower = follower, following = following)
         if Relationship_instance:
             ok = True
             Relationship_instance.delete()
-            return AcceptFollowerRequest(ok=ok)
-        return AcceptFollowerRequest(ok=ok)
+            return RemoveFollowRequest(ok=ok)
+        return RemoveFollowRequest(ok=ok)
 
-class RevokeFollowerRequest(graphene.Mutation):
+class RemoveFollowerRequest(graphene.Mutation):
     class Arguments:
         input = FollowerInput(required=True)
     ok = graphene.Boolean()
@@ -111,18 +111,18 @@ class RevokeFollowerRequest(graphene.Mutation):
         ok = False
         following = info.context.user
         follower = CustomUser.objects.get(user_name=input.userName)
-        Relationship_instance = Relationship.objects.get(Q(follower = follower, following = following, status = 1))
+        Relationship_instance = Relationship.objects.get(follower = follower, following = following)
         if Relationship_instance:
             ok = True
             Relationship_instance.delete()
-            return AcceptFollowerRequest(ok=ok)
-        return AcceptFollowerRequest(ok=ok)
+            return RemoveFollowerRequest(ok=ok)
+        return RemoveFollowerRequest(ok=ok)
 
 
 class Mutation(graphene.ObjectType):
     send_follow_request = SendFollowRequest.Field()
     update_follow_request = UpdateFollowRequest.Field()
     remove_follow_request = RemoveFollowRequest.Field()
-    revoke_follower_request = RevokeFollowerRequest.Field()
+    remove_follower_request = RemoveFollowerRequest.Field()
 
 schema = graphene.Schema(query=Query, mutation=Mutation)
