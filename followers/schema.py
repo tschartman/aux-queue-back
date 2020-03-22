@@ -73,8 +73,8 @@ class UpdateFollowRequest(graphene.Mutation):
     @staticmethod
     def mutate(root, info, input=None):
         ok = False
-        following = info.context.user
-        follower = CustomUser.objects.get(user_name=input.userName)
+        follower = info.context.user
+        following = CustomUser.objects.get(user_name=input.userName)
         Relationship_instance = Relationship.objects.get(following=following, follower=follower, status = 0)
         if Relationship_instance:
             ok = True
@@ -82,6 +82,26 @@ class UpdateFollowRequest(graphene.Mutation):
             Relationship_instance.action_user_id = info.context.user.id
             Relationship_instance.save()
             return UpdateFollowRequest(ok=ok, Relationship=Relationship_instance)
+        return UpdateFollowRequest(ok=ok, Relationship=None)
+
+class UpdateFollowerRequest(graphene.Mutation):
+    class Arguments:
+        input = FollowerInput(required=True)
+    ok = graphene.Boolean()
+    Relationship = graphene.Field(RelationshipType)
+
+    @staticmethod
+    def mutate(root, info, input=None):
+        ok = False
+        following = info.context.user
+        follower = CustomUser.objects.get(user_name=input.userName)
+        Relationship_instance = Relationship.objects.get(following=following, follower=follower)
+        if Relationship_instance:
+            ok = True
+            Relationship_instance.status = ["pending", "accepted", "declined", "blocked"].index(input.status)
+            Relationship_instance.action_user_id = info.context.user.id
+            Relationship_instance.save()
+            return UpdateFollowerRequest(ok=ok, Relationship=Relationship_instance)
         return UpdateFollowerRequest(ok=ok, Relationship=None)
 
 class RemoveFollowRequest(graphene.Mutation):
@@ -122,6 +142,7 @@ class RemoveFollowerRequest(graphene.Mutation):
 class Mutation(graphene.ObjectType):
     send_follow_request = SendFollowRequest.Field()
     update_follow_request = UpdateFollowRequest.Field()
+    update_follower_request = UpdateFollowerRequest.Field()
     remove_follow_request = RemoveFollowRequest.Field()
     remove_follower_request = RemoveFollowerRequest.Field()
 
