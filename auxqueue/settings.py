@@ -64,6 +64,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'users.apps.UsersConfig',
     'followers.apps.FollowersConfig',
+    'party.apps.PartyConfig',
     'oauth2_provider',
 ]
 
