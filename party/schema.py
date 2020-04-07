@@ -18,9 +18,9 @@ class RatingType(DjangoObjectType):
 
 class Query(ObjectType):
     party = graphene.Field(PartyType,)
-    following_parties = graphene.List(PartyType,)
-
-    def resolve_following_parties(self, info, **kwargs):
+    parties = graphene.List(PartyType,)
+    
+    def resolve_parties(self, info, **kwargs):
         user = info.context.user
         following = Relationship.objects.filter(follower=user, status=1).values('following')
         return Party.objects.filter(host__in=following)
