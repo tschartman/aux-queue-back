@@ -149,22 +149,24 @@ class SuggestSong(graphene.Mutation):
     def mutate(root, info, input=None):
         ok=False
         user = info.context.user
-        party = Party.objects.get(guests=user)
         try:
-            party.queue.get(song_uri=input.songUri)
-            return SuggestSong(ok=False)
-        except Song.DoesNotExist:
-            party.create(
-                title = input.title,
-                artist = input.artist,
-                album = input.album,
-                cover_uri = input.coverUri,
-                song_uri = input.songUri,
-                requester = user
-            )
-            return SuggestSong(ok=True)
-        return SuggestSong(ok=ok)
-    
+            party = Party.objects.get(guests=user)
+            try:
+                party.queue.get(song_uri=input.songUri)
+                return SuggestSong(ok=False)
+            except Song.DoesNotExist:
+                party.queue.create (
+                    title = input.title,
+                    artist = input.artist,
+                    album = input.album,
+                    cover_uri = input.coverUri,
+                    song_uri = input.songUri,
+                    requester = user
+                )
+                return SuggestSong(ok=True)
+        except Party.DoesNotExist:
+            return SuggestSong(ok=ok)
+            
 class RateSong(graphene.Mutation):
     class Arguments:
         input = RateSongInput(required=True)
@@ -173,17 +175,19 @@ class RateSong(graphene.Mutation):
     def mutate(root, info, input=None):
         ok=False
         user = info.context.user
-        party = Party.objects.get(guests=user)
-        song = party.queue.get(song_uri=input.songUri)
         try:
-            rating_instance = song.rating.get(user=user)
-            rating_instance.like = input.like
-            rating_instance.save()
-            return RateSong(ok=True)
-        except Rating.DoesNotExist:
-            song.rating.create(user=user, like=input.like)
-            return RateSong(ok=True)
-        return RateSong(ok=ok)
+            party = Party.objects.get(guests=user)
+            song = party.queue.get(song_uri=input.songUri)
+            try:
+                rating_instance = song.rating.get(user=user)
+                rating_instance.like = input.like
+                rating_instance.save()
+                return RateSong(ok=True)
+            except Rating.DoesNotExist:
+                song.rating.create(user=user, like=input.like)
+                return RateSong(ok=True)
+        except (Party.DoesNotExist, Song.DoesNotExist) as e:
+            return RateSong(ok=ok)
 
 class RemoveRating(graphene.Mutation):
     class Arguments:
