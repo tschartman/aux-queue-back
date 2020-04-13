@@ -1,5 +1,5 @@
 import graphene
-from party.models import Party, Song, Rating
+from party.models import Party, SuggestedSong, Rating, Song
 from graphene_django.types import DjangoObjectType, ObjectType
 from followers.models import Relationship
 from users.models import CustomUser
@@ -7,6 +7,10 @@ from users.models import CustomUser
 class PartyType(DjangoObjectType):
     class Meta:
         model = Party
+
+class SuggestedSongType(DjangoObjectType):
+    class Meta:
+        model = SuggestedSong
 
 class SongType(DjangoObjectType):
     class Meta:
@@ -50,7 +54,7 @@ class SuggestSongInput(graphene.InputObjectType):
 
 class RateSongInput(graphene.InputObjectType):
     like = graphene.Boolean()
-    songUri = graphene.String()
+    id = graphene.ID()
 
 class CreateParty(graphene.Mutation):
     ok = graphene.Boolean()
@@ -144,6 +148,7 @@ class SuggestSong(graphene.Mutation):
     class Arguments:
         input = SuggestSongInput(required=True)
     ok = graphene.Boolean()
+    suggested = graphene.Field(SuggestedSongType)
 
     @staticmethod
     def mutate(root, info, input=None):
@@ -152,18 +157,35 @@ class SuggestSong(graphene.Mutation):
         try:
             party = Party.objects.get(guests=user)
             try:
-                party.queue.get(song_uri=input.songUri)
+                song = Song.objects.get(song_uri=input.songUri)
+                party.queue.get(song=song)
                 return SuggestSong(ok=False)
-            except Song.DoesNotExist:
-                party.queue.create (
-                    title = input.title,
-                    artist = input.artist,
-                    album = input.album,
-                    cover_uri = input.coverUri,
-                    song_uri = input.songUri,
-                    requester = user
-                )
-                return SuggestSong(ok=True)
+            except (SuggestedSong.DoesNotExist, Song.DoesNotExist) as e:
+                try:
+                    song = Song.objects.get(song_uri=input.songUri)
+                    suggested = SuggestedSong(
+                        requester = user,
+                        song = song
+                    )
+                    suggested.save()
+                    party.queue.add(suggested)
+                    return SuggestSong(ok=True, suggested=suggested)
+                except Song.DoesNotExist:
+                    song = Song(
+                        title = input.title,
+                        artist = input.artist,
+                        album = input.album,
+                        cover_uri = input.coverUri,
+                        song_uri = input.songUri,
+                    )
+                    song.save()
+                    suggested = SuggestedSong(
+                        requester = user,
+                        song = song
+                    )
+                    suggested.save()
+                    party.queue.add(suggested)
+                    return SuggestSong(ok=True, suggested=suggested)
         except Party.DoesNotExist:
             return SuggestSong(ok=ok)
             
@@ -177,7 +199,7 @@ class RateSong(graphene.Mutation):
         user = info.context.user
         try:
             party = Party.objects.get(guests=user)
-            song = party.queue.get(song_uri=input.songUri)
+            song = party.queue.get(id=input.id)
             try:
                 rating_instance = song.rating.get(user=user)
                 rating_instance.like = input.like
@@ -198,7 +220,7 @@ class RemoveRating(graphene.Mutation):
         ok=False
         user = info.context.user
         party = Party.objects.get(guests=user)
-        song = party.queue.get(song_uri=input.songUri)
+        song = party.queue.get(id=input.id)
         try:
             rating_instance = song.rating.get(user=user)
             rating_instance.delete()
@@ -206,6 +228,29 @@ class RemoveRating(graphene.Mutation):
         except Rating.DoesNotExist:
             return RemoveRating(ok=False)
             
+# class ChangeCurrentSong(graphene.Mutation):
+#     class Arguments:
+#         input = SuggestSongInput(required=True)
+#     ok = graphene.Boolean()
+#     song = graphene.Field(Song)
+#     @staticmethod
+#     def mutate(root, info, input=None):
+#         ok=False
+#         user = info.context.user
+#         try:
+#             party = Party.objects.get(host=user)
+#             curent_song = Song(
+#                 title = input.title,
+#                 artist = input.artist,
+#                 album = input.album,
+#                 cover_uri = input.coverUri,
+#                 song_uri = input.songUri,
+#             )
+#                 return ChangeCurrentSong(ok=True, )
+#         except Party.DoesNotExist:
+#             return SuggestSong(ok=ok)
+
+
 class Mutation(graphene.ObjectType):
     create_party = CreateParty.Field()
     join_party = JoinParty.Field()
