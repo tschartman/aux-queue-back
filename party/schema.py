@@ -228,27 +228,36 @@ class RemoveRating(graphene.Mutation):
         except Rating.DoesNotExist:
             return RemoveRating(ok=False)
             
-# class ChangeCurrentSong(graphene.Mutation):
-#     class Arguments:
-#         input = SuggestSongInput(required=True)
-#     ok = graphene.Boolean()
-#     song = graphene.Field(Song)
-#     @staticmethod
-#     def mutate(root, info, input=None):
-#         ok=False
-#         user = info.context.user
-#         try:
-#             party = Party.objects.get(host=user)
-#             curent_song = Song(
-#                 title = input.title,
-#                 artist = input.artist,
-#                 album = input.album,
-#                 cover_uri = input.coverUri,
-#                 song_uri = input.songUri,
-#             )
-#                 return ChangeCurrentSong(ok=True, )
-#         except Party.DoesNotExist:
-#             return SuggestSong(ok=ok)
+class ChangeCurrentSong(graphene.Mutation):
+    class Arguments:
+        input = SuggestSongInput(required=True)
+    ok = graphene.Boolean()
+    currentSong = graphene.Field(SongType)
+    @staticmethod
+    def mutate(root, info, input=None):
+        ok=False
+        user = info.context.user
+        try:
+            party = Party.objects.get(host=user)
+            try:
+                current_song = Song.objects.get(song_uri = input.songUri)
+                party.currently_playing = current_song
+                party.save()
+                return ChangeCurrentSong(ok=True, currentSong=current_song)
+            except Song.DoesNotExist:
+                curent_song = Song(
+                    title = input.title,
+                    artist = input.artist,
+                    album = input.album,
+                    cover_uri = input.coverUri,
+                    song_uri = input.songUri,
+                )
+                curent_song.save()
+                party.currently_playing = current_song
+                party.save()
+                return ChangeCurrentSong(ok=True, currentSong=current_song)
+        except Party.DoesNotExist:
+            return SuggestSong(ok=ok)
 
 
 class Mutation(graphene.ObjectType):
@@ -259,5 +268,6 @@ class Mutation(graphene.ObjectType):
     suggest_song = SuggestSong.Field()
     rate_song = RateSong.Field()
     remove_rating = RemoveRating.Field()
+    change_current_song = ChangeCurrentSong.Field()
 
 schema = graphene.Schema(query=Query, mutation=Mutation)
