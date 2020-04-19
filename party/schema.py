@@ -3,6 +3,7 @@ from party.models import Party, SuggestedSong, Rating, Song
 from graphene_django.types import DjangoObjectType, ObjectType
 from followers.models import Relationship
 from users.models import CustomUser
+from auxqueue.applications.spotify import refresh, getCurrentSong
 
 class PartyType(DjangoObjectType):
     class Meta:
@@ -228,9 +229,7 @@ class RemoveRating(graphene.Mutation):
         except Rating.DoesNotExist:
             return RemoveRating(ok=False)
             
-class ChangeCurrentSong(graphene.Mutation):
-    class Arguments:
-        input = SuggestSongInput(required=True)
+class RefreshCurrentSong(graphene.Mutation):
     ok = graphene.Boolean()
     currentSong = graphene.Field(SongType)
     @staticmethod
@@ -239,25 +238,29 @@ class ChangeCurrentSong(graphene.Mutation):
         user = info.context.user
         try:
             party = Party.objects.get(host=user)
-            try:
-                current_song = Song.objects.get(song_uri = input.songUri)
-                party.currently_playing = current_song
-                party.save()
-                return ChangeCurrentSong(ok=True, currentSong=current_song)
-            except Song.DoesNotExist:
-                curent_song = Song(
-                    title = input.title,
-                    artist = input.artist,
-                    album = input.album,
-                    cover_uri = input.coverUri,
-                    song_uri = input.songUri,
-                )
-                curent_song.save()
-                party.currently_playing = current_song
-                party.save()
-                return ChangeCurrentSong(ok=True, currentSong=current_song)
+            playing = getCurrentSong(party.host)
+            if(playing != None and playing.get('item') != None):
+                playing = playing.get('item')
+                try:
+                    current_song = Song.objects.get(song_uri = playing.get('uri'))
+                    party.currently_playing = current_song
+                    party.save()
+                    return RefreshCurrentSong(ok=True, currentSong=current_song)
+                except Song.DoesNotExist:
+                    current_song = Song(
+                        title = playing.get('name'),
+                        artist = playing['artists'][0].get('name'),
+                        album = playing['album'].get('name'),
+                        cover_uri = playing['album']['images'][0].get('url'),
+                        song_uri = playing.get('uri'),
+                    )
+                    current_song.save()
+                    party.currently_playing = current_song
+                    party.save()
+                    return RefreshCurrentSong(ok=True, currentSong=current_song)
+            return RefreshCurrentSong(ok=True, currentSong=None)
         except Party.DoesNotExist:
-            return SuggestSong(ok=ok)
+            return RefreshCurrentSong(ok=ok, currentSong=None)
 
 
 class Mutation(graphene.ObjectType):
@@ -268,6 +271,6 @@ class Mutation(graphene.ObjectType):
     suggest_song = SuggestSong.Field()
     rate_song = RateSong.Field()
     remove_rating = RemoveRating.Field()
-    change_current_song = ChangeCurrentSong.Field()
+    refresh_current_song = RefreshCurrentSong.Field()
 
 schema = graphene.Schema(query=Query, mutation=Mutation)

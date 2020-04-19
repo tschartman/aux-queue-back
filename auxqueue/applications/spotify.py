@@ -25,25 +25,38 @@ def code(request):
     refresh = json.loads(response.text).get('refresh_token', '')
     return HttpResponseRedirect("https://auxqueue.com/link?token=" + token + "&refresh=" + refresh)
 
-@csrf_exempt
-def refresh(request):
-    token = json.loads(request.body).get('token', '')
+# @csrf_exempt
+# def refresh(request):
+#     token = json.loads(request.body).get('token', '')
+#     headers = {'Authorization': "Basic ".encode("utf-8") + base64.b64encode((settings.SPOTIFY_CLIENT_ID + ":" + settings.SPOTIFY_CLIENT_SECRET).encode("utf-8"))}
+#     data = {
+#         'grant_type': 'refresh_token',
+#         'refresh_token': token
+#     }
+
+#     response = requests.post('https://accounts.spotify.com/api/token', headers=headers, data = data)
+#     return HttpResponse(response)
+
+def refresh(user):
     headers = {'Authorization': "Basic ".encode("utf-8") + base64.b64encode((settings.SPOTIFY_CLIENT_ID + ":" + settings.SPOTIFY_CLIENT_SECRET).encode("utf-8"))}
     data = {
         'grant_type': 'refresh_token',
-        'refresh_token': token
+        'refresh_token': user.refresh_token
     }
 
     response = requests.post('https://accounts.spotify.com/api/token', headers=headers, data = data)
-    return HttpResponse(response)
+    token = json.loads(response.text).get('access_token')
+    user.access_token = token
+    user.save()
+    return user
 
-class SpotfyMiddleware:
-    def refresh(token):
-        headers = {'Authorization': "Basic ".encode("utf-8") + base64.b64encode((settings.SPOTIFY_CLIENT_ID + ":" + settings.SPOTIFY_CLIENT_SECRET).encode("utf-8"))}
-        data = {
-            'grant_type': 'refresh_token',
-            'refresh_token': token
-        }
-
-        response = requests.post('https://accounts.spotify.com/api/token', headers=headers, data = data)
-        return json.loads(response.text).get('access_token')
+def getCurrentSong(user):
+    headers = {'Authorization': "Bearer " + user.access_token}
+    response =  requests.get('https://api.spotify.com/v1/me/player/currently-playing', headers=headers)
+    if response.status_code == 401:
+        updatedUser = refresh(user)
+        getCurrentSong(updatedUser)
+    elif response.status_code == 200:
+        return response.json()
+    else:
+        return None

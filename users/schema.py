@@ -6,7 +6,7 @@ from users.models import CustomUser
 from django.db.models import Q
 from rest_framework.permissions import AllowAny
 from rest_framework import permissions
-from auxqueue.applications.spotify import SpotfyMiddleware
+from auxqueue.applications.spotify import refresh
 
 class CustomUserType(DjangoObjectType):
     class Meta:
@@ -182,9 +182,7 @@ class RefreshTokens(graphene.Mutation):
         user_instance = info.context.user
         if user_instance:
             ok = True
-            token = SpotfyMiddleware.refresh(user_instance.refresh_token)
-            user_instance.access_token = token
-            user_instance.save()
+            user_instance = refresh(user_instance)
             return RefreshTokens(ok=ok, user=user_instance)
         return RefreshTokens(ok=ok, user=None)
             
