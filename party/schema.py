@@ -230,6 +230,8 @@ class RemoveRating(graphene.Mutation):
             return RemoveRating(ok=False)
             
 class RefreshCurrentSong(graphene.Mutation):
+    class Arguments:
+        input = JoinPartyInput(required=True)
     ok = graphene.Boolean()
     currentSong = graphene.Field(SongType)
     @staticmethod
@@ -237,7 +239,8 @@ class RefreshCurrentSong(graphene.Mutation):
         ok=False
         user = info.context.user
         try:
-            party = Party.objects.get(host=user)
+            host = CustomUser.objects.get(user_name=input.userName)
+            party = Party.objects.get(host=host)
             playing = getCurrentSong(party.host)
             if(playing != None and playing.get('item') != None):
                 playing = playing.get('item')
@@ -258,8 +261,10 @@ class RefreshCurrentSong(graphene.Mutation):
                     party.currently_playing = current_song
                     party.save()
                     return RefreshCurrentSong(ok=True, currentSong=current_song)
+            party.currently_playing = None
+            party.save()
             return RefreshCurrentSong(ok=True, currentSong=None)
-        except Party.DoesNotExist:
+        except (Party.DoesNotExist, CustomUser.DoesNotExist) as e:
             return RefreshCurrentSong(ok=ok, currentSong=None)
 
 
