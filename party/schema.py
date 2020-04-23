@@ -229,6 +229,22 @@ class RemoveRating(graphene.Mutation):
         except Rating.DoesNotExist:
             return RemoveRating(ok=False)
             
+class RemoveSong(graphene.Mutation):
+    class Arguments:
+        input = RateSongInput(required=True)
+    ok = graphene.Boolean()
+    @staticmethod
+    def mutate(root, info, input=None):
+        ok=False
+        user = info.context.user
+        try:
+            party = Party.objects.get(host=user)
+            song = party.queue.get(id=input.id)
+            party.queue.remove(song)
+            return RemoveSong(ok=True)
+        except (Party.DoesNotExist, Song.DoesNotExist) as e:
+            return RemoveSong(ok=ok)
+
 class RefreshCurrentSong(graphene.Mutation):
     class Arguments:
         input = JoinPartyInput(required=True)
@@ -275,6 +291,7 @@ class Mutation(graphene.ObjectType):
     shut_down_party = ShutDownParty.Field()
     suggest_song = SuggestSong.Field()
     rate_song = RateSong.Field()
+    remove_song = RemoveSong.Field()
     remove_rating = RemoveRating.Field()
     refresh_current_song = RefreshCurrentSong.Field()
 
