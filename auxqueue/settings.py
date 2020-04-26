@@ -25,6 +25,7 @@ DEBUG = env('DEBUG')
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 environ.Env.read_env()
 
+ASGI_APPLICATION = 'auxqueue.routing.application'
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
@@ -62,11 +63,19 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'channels',
+    'graphene_subscriptions',
     'users.apps.UsersConfig',
     'followers.apps.FollowersConfig',
     'party.apps.PartyConfig',
     'oauth2_provider',
 ]
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer"
+    }
+}
 
 GRAPHENE = {
     'SCHEMA': 'auxqueue.schema.schema',

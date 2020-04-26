@@ -1,9 +1,13 @@
 import graphene
+from rx import Observable
+from graphene_subscriptions.events import CREATED
+from graphene_subscriptions.events import SubscriptionEvent
 from party.models import Party, SuggestedSong, Rating, Song
 from graphene_django.types import DjangoObjectType, ObjectType
 from followers.models import Relationship
 from users.models import CustomUser
 from auxqueue.applications.spotify import refresh, getCurrentSong
+import json
 
 class PartyType(DjangoObjectType):
     class Meta:
@@ -20,6 +24,17 @@ class SongType(DjangoObjectType):
 class RatingType(DjangoObjectType):
     class Meta:
         model = Rating
+
+class PartySubscription(graphene.ObjectType):
+    party_created = graphene.Field(PartyType)
+
+    def resolve_party_created(root, info):
+        return root.filter(
+            lambda event:
+                event.operation == CREATED and
+                isinstance(event.instance, Party)
+        ).map(lambda event: event.instance)
+
 
 class Query(ObjectType):
     party = graphene.Field(PartyType,)
@@ -264,6 +279,7 @@ class RefreshCurrentSong(graphene.Mutation):
                     current_song = Song.objects.get(song_uri = playing.get('uri'))
                     party.currently_playing = current_song
                     party.save()
+                    PartySubscription.broadcast(group='group42', payload={})
                     return RefreshCurrentSong(ok=True, currentSong=current_song)
                 except Song.DoesNotExist:
                     current_song = Song(
@@ -276,10 +292,12 @@ class RefreshCurrentSong(graphene.Mutation):
                     current_song.save()
                     party.currently_playing = current_song
                     party.save()
+                    PartySubscription.broadcast(group='group42', payload={})
                     return RefreshCurrentSong(ok=True, currentSong=current_song)
             party.currently_playing = None
             party.save()
             return RefreshCurrentSong(ok=True, currentSong=None)
+            PartySubscription.broadcast(group='group42', payload={"test"})
         except (Party.DoesNotExist, CustomUser.DoesNotExist) as e:
             return RefreshCurrentSong(ok=ok, currentSong=None)
 
