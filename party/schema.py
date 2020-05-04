@@ -1,6 +1,6 @@
 import graphene
 from rx import Observable
-from graphene_subscriptions.events import CREATED
+from graphene_subscriptions.events import CREATED, DELETED, UPDATED
 from graphene_subscriptions.events import SubscriptionEvent
 from party.models import Party, SuggestedSong, Rating, Song
 from graphene_django.types import DjangoObjectType, ObjectType
@@ -27,6 +27,8 @@ class RatingType(DjangoObjectType):
 
 class PartySubscription(graphene.ObjectType):
     party_created = graphene.Field(PartyType)
+    party_deleted = graphene.Field(PartyType)
+    party_updated = graphene.Field(PartyType, id=graphene.ID())
 
     def resolve_party_created(root, info):
         return root.filter(
@@ -35,6 +37,20 @@ class PartySubscription(graphene.ObjectType):
                 isinstance(event.instance, Party)
         ).map(lambda event: event.instance)
 
+    def resolve_party_deleted(root, info):
+        return root.filter(
+            lambda event:
+                event.operation == DELETED and
+                isinstance(event.instance, Party)
+        ).map(lambda event: event.instance)
+
+    def resolve_party_updated(root, info, id):
+        return root.filter(
+            lambda event: 
+                event.operation == UPDATED and
+                isinstance(event.instance, Party)  and
+                event.instance.pk == int(id)
+        ).map(lambda event: event.instance)
 
 class Query(ObjectType):
     party = graphene.Field(PartyType,)
@@ -143,6 +159,7 @@ class LeaveParty(graphene.Mutation):
             try:
                 party = Party.objects.get(guests=user)
                 party.guests.remove(user)
+                party.save()
                 return LeaveParty(ok=True)
             except Party.DoesNotExist:
                 return LeaveParty(ok=ok)
@@ -185,6 +202,7 @@ class SuggestSong(graphene.Mutation):
                     )
                     suggested.save()
                     party.queue.add(suggested)
+                    party.save()
                     return SuggestSong(ok=True, suggested=suggested)
                 except Song.DoesNotExist:
                     song = Song(
@@ -201,6 +219,7 @@ class SuggestSong(graphene.Mutation):
                     )
                     suggested.save()
                     party.queue.add(suggested)
+                    party.save()
                     return SuggestSong(ok=True, suggested=suggested)
         except Party.DoesNotExist:
             return SuggestSong(ok=ok)
@@ -220,9 +239,11 @@ class RateSong(graphene.Mutation):
                 rating_instance = song.rating.get(user=user)
                 rating_instance.like = input.like
                 rating_instance.save()
+                party.save()
                 return RateSong(ok=True)
             except Rating.DoesNotExist:
                 song.rating.create(user=user, like=input.like)
+                party.save()
                 return RateSong(ok=True)
         except (Party.DoesNotExist, Song.DoesNotExist) as e:
             return RateSong(ok=ok)
@@ -240,6 +261,7 @@ class RemoveRating(graphene.Mutation):
         try:
             rating_instance = song.rating.get(user=user)
             rating_instance.delete()
+            party.save()
             return RemoveRating(ok=True)
         except Rating.DoesNotExist:
             return RemoveRating(ok=False)
@@ -256,6 +278,7 @@ class RemoveSong(graphene.Mutation):
             party = Party.objects.get(host=user)
             song = party.queue.get(id=input.id)
             party.queue.remove(song)
+            party.save()
             return RemoveSong(ok=True)
         except (Party.DoesNotExist, Song.DoesNotExist) as e:
             return RemoveSong(ok=ok)
@@ -279,7 +302,6 @@ class RefreshCurrentSong(graphene.Mutation):
                     current_song = Song.objects.get(song_uri = playing.get('uri'))
                     party.currently_playing = current_song
                     party.save()
-                    PartySubscription.broadcast(group='group42', payload={})
                     return RefreshCurrentSong(ok=True, currentSong=current_song)
                 except Song.DoesNotExist:
                     current_song = Song(
@@ -292,12 +314,10 @@ class RefreshCurrentSong(graphene.Mutation):
                     current_song.save()
                     party.currently_playing = current_song
                     party.save()
-                    PartySubscription.broadcast(group='group42', payload={})
                     return RefreshCurrentSong(ok=True, currentSong=current_song)
             party.currently_playing = None
             party.save()
             return RefreshCurrentSong(ok=True, currentSong=None)
-            PartySubscription.broadcast(group='group42', payload={"test"})
         except (Party.DoesNotExist, CustomUser.DoesNotExist) as e:
             return RefreshCurrentSong(ok=ok, currentSong=None)
 
