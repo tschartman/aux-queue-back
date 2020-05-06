@@ -1,0 +1,12 @@
+env = environ.Env(
+    # set casting, default value
+    DEBUG=(bool, True)
+)
+
+SECRET_KEY = env('SECRET_KEY')
+APP_CLIENT_ID = env('APP_CLIENT_ID')
+APP_CLIENT_SECRET = env('APP_CLIENT_SECRET')
+SPOTIFY_CLIENT_ID = env('SPOTIFY_CLIENT_ID')
+SPOTIFY_CLIENT_SECRET = env('SPOTIFY_CLIENT_SECRET')
+API_ENDPOINT = env('API_ENDPOINT')
+DEBUG = env('DEBUG')

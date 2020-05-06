@@ -13,13 +13,11 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 import os
 import django_heroku
 import environ
-env = environ.Env(
-    # set casting, default value
-    DEBUG=(bool, False)
-)
-# False if not in os.environ
-DEBUG = env('DEBUG')
-#os.environ.get('DEBUG')
+
+try:
+    from local_settings import *
+except ImportError as e:
+    pass
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -30,20 +28,12 @@ ASGI_APPLICATION = 'auxqueue.routing.application'
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-# SECRET_KEY = os.environ.get('SECRET_KEY')
-# APP_CLIENT_ID = os.environ.get('APP_CLIENT_ID')
-# APP_CLIENT_SECRET = os.environ.get('APP_CLIENT_SECRET')
-# SPOTIFY_CLIENT_ID = os.environ.get('SPOTIFY_CLIENT_ID')
-# SPOTIFY_CLIENT_SECRET = os.environ.get('SPOTIFY_CLIENT_SECRET')
-# API_ENDPOINT = os.environ.get('API_ENDPOINT')
-
-SECRET_KEY = env('SECRET_KEY')
-APP_CLIENT_ID = env('APP_CLIENT_ID')
-APP_CLIENT_SECRET = env('APP_CLIENT_SECRET')
-SPOTIFY_CLIENT_ID = env('SPOTIFY_CLIENT_ID')
-SPOTIFY_CLIENT_SECRET = env('SPOTIFY_CLIENT_SECRET')
-API_ENDPOINT = env('API_ENDPOINT')
+SECRET_KEY = os.environ.get('SECRET_KEY')
+APP_CLIENT_ID = os.environ.get('APP_CLIENT_ID')
+APP_CLIENT_SECRET = os.environ.get('APP_CLIENT_SECRET')
+SPOTIFY_CLIENT_ID = os.environ.get('SPOTIFY_CLIENT_ID')
+SPOTIFY_CLIENT_SECRET = os.environ.get('SPOTIFY_CLIENT_SECRET')
+API_ENDPOINT = os.environ.get('API_ENDPOINT')
 
 ALLOWED_HOSTS = ['https://auxstack.herokuapp.com/', 'http://localhost:8000']
 
