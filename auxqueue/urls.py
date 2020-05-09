@@ -18,7 +18,7 @@ from django.urls import path, include
 from graphene_django.views import GraphQLView
 from django.views.decorators.csrf import csrf_exempt
 from auxqueue.schema import schema
-from auxqueue.applications import spotify, login
+from auxqueue.applications import spotify, login, username
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -27,6 +27,7 @@ urlpatterns = [
     path('login/refresh/', login.refresh),
     path('graphql/', csrf_exempt(GraphQLView.as_view(graphiql=True))),
     path('', include('users.urls')),
+    path('username/', username.usernameValidator),
     path('spotify/', spotify.auth),
     path('spotify/code/', spotify.code),
     path('spotify/refresh', spotify.refresh),
