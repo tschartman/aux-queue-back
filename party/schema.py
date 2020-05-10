@@ -7,6 +7,7 @@ from graphene_django.types import DjangoObjectType, ObjectType
 from followers.models import Relationship
 from users.models import CustomUser
 from auxqueue.applications.spotify import refresh, getCurrentSong
+from django.db.models import Q
 import json
 
 class PartyType(DjangoObjectType):
@@ -59,8 +60,8 @@ class Query(ObjectType):
     def resolve_parties(self, info, **kwargs):
         user = info.context.user
         following = Relationship.objects.filter(follower=user, status=1).values('following')
-        return Party.objects.filter(host__in=following)
-    
+        return Party.objects.filter(Q(host__in=following) | Q(host=user))
+
     def resolve_party(self, info, **kwargs):
         user = info.context.user
         try:
