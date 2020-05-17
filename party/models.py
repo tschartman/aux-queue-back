@@ -19,7 +19,6 @@ class SuggestedSong(models.Model):
 
 class Guest(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='user', on_delete=models.CASCADE)
-    blocked = models.BooleanField(default=False)
     allowed_requests = models.IntegerField(default=5)
     amount_requested = models.IntegerField(default=0)
 

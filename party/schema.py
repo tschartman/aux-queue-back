@@ -79,6 +79,9 @@ class Query(ObjectType):
 class JoinPartyInput(graphene.InputObjectType):
     userName = graphene.String()
 
+class RemoveFromPartyInput(graphene.InputObjectType):
+    id = graphene.ID()
+
 class EditPartyInput(graphene.InputObjectType):
     name = graphene.String()
 
@@ -157,6 +160,24 @@ class JoinParty(graphene.Mutation):
                     return JoinParty(ok=True, party=party_instance)
                 except (CustomUser.DoesNotExist, Relationship.DoesNotExist, Party.DoesNotExist) as error:
                     return JoinParty(ok=ok, party=None)
+
+
+class RemoveFromParty(graphene.Mutation):
+    class Arguments:
+        input = RemoveFromPartyInput(required=True)
+    ok = graphene.Boolean()
+    @staticmethod
+    def mutate(root, info, input=None):
+        ok = False
+        user = info.context.user
+        try:
+            party = Party.objects.get(host=user)
+            guest = party.guests.get(id=input.id)
+            party.guests.remove(guest)
+            party.save()
+            return RemoveFromParty(ok=True)
+        except (Party.DoesNotExist, Guest.DoesNotExist) as e:
+            return RemoveFromParty(ok=ok) 
 
 class LeaveParty(graphene.Mutation):
     ok = graphene.Boolean()
@@ -362,6 +383,7 @@ class Mutation(graphene.ObjectType):
     create_party = CreateParty.Field()
     join_party = JoinParty.Field()
     leave_party = LeaveParty.Field()
+    remove_from_party = RemoveFromParty.Field()
     shut_down_party = ShutDownParty.Field()
     suggest_song = SuggestSong.Field()
     update_allowed_requests = UpdateAllowedRequests.Field()
