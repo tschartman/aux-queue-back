@@ -2,7 +2,7 @@ import graphene
 from rx import Observable
 from graphene_subscriptions.events import CREATED, DELETED, UPDATED
 from graphene_subscriptions.events import SubscriptionEvent
-from party.models import Party, SuggestedSong, Rating, Song
+from party.models import Party, SuggestedSong, Rating, Song, Guest
 from graphene_django.types import DjangoObjectType, ObjectType
 from followers.models import Relationship
 from users.models import CustomUser
@@ -13,6 +13,10 @@ import json
 class PartyType(DjangoObjectType):
     class Meta:
         model = Party
+
+class GuestType(DjangoObjectType):
+    class Meta:
+        model = Guest
 
 class SuggestedSongType(DjangoObjectType):
     class Meta:
@@ -68,7 +72,7 @@ class Query(ObjectType):
             return Party.objects.get(host=user)
         except Party.DoesNotExist:
             try:
-                return Party.objects.get(guests=user)
+                return Party.objects.get(guests__user=user)
             except Party.DoesNotExist:
                 return None
 
@@ -84,6 +88,10 @@ class SuggestSongInput(graphene.InputObjectType):
     album = graphene.String()
     coverUri = graphene.String()
     songUri = graphene.String()
+
+class UpdateAllowedRequestsInput(graphene.InputObjectType):
+    amount = graphene.Int()
+    id = graphene.ID()
 
 class RateSongInput(graphene.InputObjectType):
     like = graphene.Boolean()
@@ -102,7 +110,7 @@ class CreateParty(graphene.Mutation):
             return CreateParty(ok=ok, party=None)
         except Party.DoesNotExist:
             try:
-                party = Party.objects.get(guests=user)
+                party = Party.objects.get(guests__user=user)
                 party.guests.remove(user)
                 party_instance = Party(host = user)
                 party_instance.save()
@@ -127,13 +135,15 @@ class JoinParty(graphene.Mutation):
             return JoinParty(ok=ok, party=None)
         except Party.DoesNotExist:
             try:
-                party = Party.objects.get(guests=user)
-                party.guests.remove(user)
+                party = Party.objects.get(guests__user=user)
+                guest = party.guests.get(user=user)
+                party.guests.remove(guest)
                 try:
                     following = CustomUser.objects.get(user_name=input.userName)
                     followingRel = Relationship.objects.get(following=following, follower=user, status=1)
                     party_instance = Party.objects.get(host=following)
-                    party_instance.guests.add(user)
+                    party_instance.guests.create(user=user)
+                    party_instance.save()
                     return JoinParty(ok=True, party=party_instance)
                 except (CustomUser.DoesNotExist, Relationship.DoesNotExist, Party.DoesNotExist) as error:
                     return JoinParty(ok=ok, party=None)
@@ -142,7 +152,8 @@ class JoinParty(graphene.Mutation):
                     following = CustomUser.objects.get(user_name=input.userName)
                     followingRel = Relationship.objects.get(following=following, follower=user, status=1)
                     party_instance = Party.objects.get(host=following)
-                    party_instance.guests.add(user)
+                    party_instance.guests.create(user=user)
+                    party_instance.save()
                     return JoinParty(ok=True, party=party_instance)
                 except (CustomUser.DoesNotExist, Relationship.DoesNotExist, Party.DoesNotExist) as error:
                     return JoinParty(ok=ok, party=None)
@@ -158,8 +169,9 @@ class LeaveParty(graphene.Mutation):
             return LeaveParty(ok=ok)
         except Party.DoesNotExist:
             try:
-                party = Party.objects.get(guests=user)
-                party.guests.remove(user)
+                party = Party.objects.get(guests__user=user)
+                guest = party.guests.get(user=user)
+                party.guests.remove(guest)
                 party.save()
                 return LeaveParty(ok=True)
             except Party.DoesNotExist:
@@ -189,11 +201,14 @@ class SuggestSong(graphene.Mutation):
         ok=False
         user = info.context.user
         try:
-            party = Party.objects.get(guests=user)
+            party = Party.objects.get(guests__user=user)
+            guest = party.guests.get(user=user)
+            if guest.amount_requested >= guest.allowed_requests:
+                return SuggestSong(ok=ok)
             try:
                 song = Song.objects.get(song_uri=input.songUri)
                 party.queue.get(song=song)
-                return SuggestSong(ok=False)
+                return SuggestSong(ok=ok)
             except (SuggestedSong.DoesNotExist, Song.DoesNotExist) as e:
                 try:
                     song = Song.objects.get(song_uri=input.songUri)
@@ -203,6 +218,7 @@ class SuggestSong(graphene.Mutation):
                     )
                     suggested.save()
                     party.queue.add(suggested)
+                    guest.amount_requested += 1
                     party.save()
                     return SuggestSong(ok=True, suggested=suggested)
                 except Song.DoesNotExist:
@@ -220,11 +236,30 @@ class SuggestSong(graphene.Mutation):
                     )
                     suggested.save()
                     party.queue.add(suggested)
+                    guest.amount_requested += 1
+                    guest.save()
                     party.save()
                     return SuggestSong(ok=True, suggested=suggested)
         except Party.DoesNotExist:
             return SuggestSong(ok=ok)
-            
+
+class UpdateAllowedRequests(graphene.Mutation):
+    class Arguments:
+        input = UpdateAllowedRequestsInput(required=True)
+    ok = graphene.Boolean()
+    guest = graphene.Field(GuestType)
+    @staticmethod
+    def mutate(root, info, input=None):
+        ok=False
+        try:
+            party = Party.objects.get(guests__id=input.id)
+            guest_instance = party.guests.get(id=input.id)
+            guest_instance.allowed_requests = input.amount
+            guest_instance.save()
+            return UpdateAllowedRequests(ok=True, guest=guest_instance)
+        except Party.DoesNotExist:
+            return UpdateAllowedRequests(ok=ok)
+
 class RateSong(graphene.Mutation):
     class Arguments:
         input = RateSongInput(required=True)
@@ -234,7 +269,7 @@ class RateSong(graphene.Mutation):
         ok=False
         user = info.context.user
         try:
-            party = Party.objects.get(guests=user)
+            party = Party.objects.get(guests__user=user)
             song = party.queue.get(id=input.id)
             try:
                 rating_instance = song.rating.get(user=user)
@@ -257,7 +292,7 @@ class RemoveRating(graphene.Mutation):
     def mutate(root, info, input=None):
         ok=False
         user = info.context.user
-        party = Party.objects.get(guests=user)
+        party = Party.objects.get(guests__user=user)
         song = party.queue.get(id=input.id)
         try:
             rating_instance = song.rating.get(user=user)
@@ -329,6 +364,7 @@ class Mutation(graphene.ObjectType):
     leave_party = LeaveParty.Field()
     shut_down_party = ShutDownParty.Field()
     suggest_song = SuggestSong.Field()
+    update_allowed_requests = UpdateAllowedRequests.Field()
     rate_song = RateSong.Field()
     remove_song = RemoveSong.Field()
     remove_rating = RemoveRating.Field()
