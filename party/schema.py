@@ -240,6 +240,7 @@ class SuggestSong(graphene.Mutation):
                     suggested.save()
                     party.queue.add(suggested)
                     guest.amount_requested += 1
+                    guest.save()
                     party.save()
                     return SuggestSong(ok=True, suggested=suggested)
                 except Song.DoesNotExist:
