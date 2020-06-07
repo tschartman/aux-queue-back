@@ -12,15 +12,14 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 
 import os
 import django_heroku
-import environ
+# import environ
 
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-environ.Env.read_env()
-env = environ.Env()
+# environ.Env.read_env()
+# env = environ.Env()
 ASGI_APPLICATION = 'auxqueue.routing.application'
-
 
 # SECRET_KEY = env('SECRET_KEY')
 # APP_CLIENT_ID = env('APP_CLIENT_ID')
@@ -41,7 +40,7 @@ SPOTIFY_CLIENT_ID = os.environ.get('SPOTIFY_CLIENT_ID')
 SPOTIFY_CLIENT_SECRET = os.environ.get('SPOTIFY_CLIENT_SECRET')
 API_ENDPOINT = os.environ.get('API_ENDPOINT')
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['https://auxstack.herokuapp.com/']
 
 AUTH_USER_MODEL = 'users.CustomUser'
 
