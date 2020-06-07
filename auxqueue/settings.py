@@ -21,6 +21,7 @@ environ.Env.read_env()
 env = environ.Env()
 ASGI_APPLICATION = 'auxqueue.routing.application'
 
+
 # SECRET_KEY = env('SECRET_KEY')
 # APP_CLIENT_ID = env('APP_CLIENT_ID')
 # APP_CLIENT_SECRET = env('APP_CLIENT_SECRET')
