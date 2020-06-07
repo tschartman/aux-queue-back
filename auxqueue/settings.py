@@ -19,7 +19,7 @@ import django_heroku
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # environ.Env.read_env()
 # env = environ.Env()
-# ASGI_APPLICATION = 'auxqueue.routing.application'
+ASGI_APPLICATION = 'auxqueue.routing.application'
 
 # SECRET_KEY = env('SECRET_KEY')
 # APP_CLIENT_ID = env('APP_CLIENT_ID')
@@ -33,12 +33,12 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
-SECRET_KEY = os.environ.get('SECRET_KEY')
-APP_CLIENT_ID = os.environ.get('APP_CLIENT_ID')
-APP_CLIENT_SECRET = os.environ.get('APP_CLIENT_SECRET')
-SPOTIFY_CLIENT_ID = os.environ.get('SPOTIFY_CLIENT_ID')
-SPOTIFY_CLIENT_SECRET = os.environ.get('SPOTIFY_CLIENT_SECRET')
-API_ENDPOINT = os.environ.get('API_ENDPOINT')
+# SECRET_KEY = os.environ.get('SECRET_KEY')
+# APP_CLIENT_ID = os.environ.get('APP_CLIENT_ID')
+# APP_CLIENT_SECRET = os.environ.get('APP_CLIENT_SECRET')
+# SPOTIFY_CLIENT_ID = os.environ.get('SPOTIFY_CLIENT_ID')
+# SPOTIFY_CLIENT_SECRET = os.environ.get('SPOTIFY_CLIENT_SECRET')
+# API_ENDPOINT = os.environ.get('API_ENDPOINT')
 
 ALLOWED_HOSTS = ['https://auxstack.herokuapp.com/', 'http://localhost:8000']
 
