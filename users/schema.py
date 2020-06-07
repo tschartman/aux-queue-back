@@ -1,21 +1,26 @@
 import graphene
+import hashlib
+from graphql_jwt.decorators import login_required
 from graphene_django.types import DjangoObjectType, ObjectType
-from users.models import CustomUser, Friendship
+from users.models import CustomUser
 from django.db.models import Q
+from rest_framework.permissions import AllowAny
+from rest_framework import permissions
+from auxqueue.applications.spotify import refresh
 
 class CustomUserType(DjangoObjectType):
     class Meta:
         model = CustomUser
-
-class FriendshipType(DjangoObjectType):
+        fields = ("first_name", "last_name", "user_name", "user_image", "email", "access_token", "refresh_token",)
+class CustomUsersType(DjangoObjectType):
     class Meta:
-        model = Friendship
+        model = CustomUser
+        fields = ("first_name", "last_name", "user_name", "user_image", "email", "access_token", "refresh_token",)
 
 class Query(ObjectType):
     user = graphene.Field(CustomUserType,)
-    friend = graphene.Field(FriendshipType, email=graphene.String())
-    users = graphene.List(CustomUserType,)
-    friends = graphene.List(FriendshipType,)
+    users = graphene.List(CustomUsersType,)
+    userName = graphene.String()
 
     def resolve_user(self, info, **kwargs):
         user = info.context.user
@@ -23,33 +28,75 @@ class Query(ObjectType):
             return None
         return user
     
-    def resolve_friend(self, info, **kwargs):
-        email = kwargs.get('email')
-        user_one = info.context.user
-        user_two = CustomUser.objects.get(email=email)
-        return Friendship.objects.get(Q(user_one = user_one, user_two = user_two, status = 1) | Q(user_two = user_one, user_one = user_two, status = 1) )
-
+    @login_required
     def resolve_users(self, info, **kwargs):
         return CustomUser.objects.all()
 
-    def resolve_friends(self, info, **kwargs):
-        user = info.context.user
-        return Friendship.objects.filter(Q(user_one = user) | Q(user_two = user))
+    def resolve_userName(self, info, **kwargs):
+        userName = Generator.generate_username() 
+        return userName
+
 
 class UserInput(graphene.InputObjectType):
-    id = graphene.ID()
     firstName = graphene.String()
     lastName = graphene.String()
     email = graphene.String()
 
-class FriendInput(graphene.InputObjectType):
-    id = graphene.ID()
+class UserCreationInput(graphene.InputObjectType):
+    firstName = graphene.String()
+    lastName = graphene.String()
+    userName = graphene.String()
     email = graphene.String()
-    user_one = graphene.Field(UserInput)
-    user_two = graphene.Field(UserInput)
-    status = graphene.String()
-    permissions = graphene.String()
-    actionId = graphene.Int()
+    password = graphene.String()
+
+class CheckUsernameInput(graphene.InputObjectType):
+    userName = graphene.String()
+
+class ChangePasswordInput(graphene.InputObjectType):
+    oldPass = graphene.String()
+    newPass = graphene.String()
+
+class TokenInput(graphene.InputObjectType):
+    accessToken = graphene.String()
+    refreshToken = graphene.String()
+
+class CreateUser(graphene.Mutation):
+    class Arguments:
+        input = UserCreationInput(required=True)
+    
+    ok = graphene.Boolean()
+    user = graphene.Field(CustomUserType)
+    @staticmethod
+    def mutate(root, info, input=None):
+        ok = True
+        url = 'https://secure.gravatar.com/avatar'
+        email_hash = hashlib.md5(input.email.encode('utf-8')).hexdigest()
+        unique = (len(CustomUser.objects.filter(user_name=input.userName)) == 0)
+        if unique:
+            user_instance = CustomUser(
+                email = input.email,
+                user_name = input.userName,
+                first_name = input.firstName,
+                last_name = input.lastName,
+                user_image = '{url}/{hash}'.format(url=url, hash=email_hash)
+            )
+            user_instance.set_password(input.password)
+            user_instance.save()
+            return CreateUser(ok=ok, user=user_instance)
+        return CreateUser(ok=False, user=None)
+
+class CheckUserName(graphene.Mutation):
+    class Arguments:
+        input = CheckUsernameInput(required=True)
+
+    ok = graphene.Boolean()
+
+    @staticmethod
+    def mutate(root, info, input=None):
+        users = CustomUser.objects.filter(user_name=input.userName)
+        if len(users) == 0:
+            return CheckUserName(ok=True)
+        return CheckUserName(ok = False)
 
 class UpdateUser(graphene.Mutation):
     class Arguments:
@@ -59,7 +106,7 @@ class UpdateUser(graphene.Mutation):
     user = graphene.Field(CustomUserType)
 
     @staticmethod
-    def mutate(root, info, id, input=None):
+    def mutate(root, info, input=None):
         ok = False
         user_instance = info.context.user
         if user_instance:
@@ -71,71 +118,83 @@ class UpdateUser(graphene.Mutation):
             return UpdateUser(ok=ok, user=user_instance)
         return UpdateUser(ok=ok, user=None)
 
-class AcceptFriendRequest(graphene.Mutation):
+class UpdateUserName(graphene.Mutation):
     class Arguments:
-        input = FriendInput(required=True)
+        input = CheckUsernameInput(required=True)
     ok = graphene.Boolean()
-    friendship = graphene.Field(FriendshipType)
+    userName = graphene.String()
 
     @staticmethod
     def mutate(root, info, input=None):
         ok = False
-        user_two = info.context.user
-        user_one = CustomUser.objects.get(email=input.email)
-        friendship_instance = Friendship.objects.get(Q(user_one = user_one, user_two = user_two, status = 0))
-        if friendship_instance:
+        unique = (len(CustomUser.objects.filter(user_name=input.userName)) == 0)
+        user_instance = info.context.user
+        if user_instance and unique:
+            print(user_instance.user_name)
             ok = True
-            friendship_instance.status = 1
-            friendship_instance.action_user_id = info.context.user.id
-            friendship_instance.save()
-            return AcceptFriendRequest(ok=ok, friendship=friendship_instance)
-        return AcceptFriendRequest(ok=ok, friendship=None)
+            user_instance.user_name = input.userName
+            user_instance.save()
+            return UpdateUserName(ok=ok, userName=user_instance.user_name)
+        return UpdateUserName(ok=ok, userName=None)
 
-class UpdateFriendRequest(graphene.Mutation):
+class UpdatePassword(graphene.Mutation):
     class Arguments:
-        input = FriendInput(required=True)
+        input = ChangePasswordInput(required=True)
     ok = graphene.Boolean()
-    friendship = graphene.Field(FriendshipType)
+    error = graphene.String()
+    @staticmethod
+    def mutate(root, info, input=None):
+        ok = False
+        user_instance = info.context.user
+        if user_instance:
+            if user_instance.check_password(input.oldPass):
+                user_instance.set_password(input.newPass)
+                user_instance.save()
+                return UpdatePassword(ok=True, error=None)
+            return UpdatePassword(ok=False, error="Old Password Incorrect")
+        return UpdatePassword(ok=False, error="Error Updating Password")
+
+class UpdateTokens(graphene.Mutation):
+    class Arguments:
+        input = TokenInput(required=True)
+
+    ok = graphene.Boolean()
+    user = graphene.Field(CustomUserType)
 
     @staticmethod
     def mutate(root, info, input=None):
         ok = False
-        user_two = info.context.user
-        user_one = CustomUser.objects.get(email=input.email)
-        friendship_instance = Friendship.objects.get(Q(user_one = user_one, user_two = user_two, status = 1) | Q(user_two = user_one, user_one = user_two, status = 1) )
-        if friendship_instance:
+        user_instance = info.context.user
+        if user_instance:
             ok = True
-            friendship_instance.status = ["pending", "accepted", "declined", "blocked"].index(input.status)
-            friendship_instance.action_user_id = info.context.user.id
-            friendship_instance.save()
-            return AcceptFriendRequest(ok=ok, friendship=friendship_instance)
-        return AcceptFriendRequest(ok=ok, friendship=None)
+            user_instance.access_token = input.accessToken
+            user_instance.refresh_token = input.refreshToken
+            user_instance.save()
+            return UpdateTokens(ok=ok, user=user_instance)
+        return UpdateTokens(ok=ok, user=None)
 
-class SendFriendRequest(graphene.Mutation):
-    class Arguments:
-        input = FriendInput(required=True)
+class RefreshTokens(graphene.Mutation):
     ok = graphene.Boolean()
-    friendship = graphene.Field(FriendshipType)
-
+    user = graphene.Field(CustomUserType)
     @staticmethod
-    def mutate(root, info, input=None):
-        ok = True
-        user_one = info.context.user
-        user_two = CustomUser.objects.get(email=input.email)
-        if user_one is None or user_two is None:
-            return SendFriendRequest(ok=False, friendship=None)
-        friendship_instance = Friendship(
-            user_one = user_one,
-            user_two = user_two,
-            action_user_id = info.context.user.id
-            )
-        friendship_instance.save()
-        return SendFriendRequest(ok=ok, friendship=friendship_instance)
+    def mutate(root, info):
+        ok = False
+        user_instance = info.context.user
+        if user_instance:
+            ok = True
+            user_instance = refresh(user_instance)
+            return RefreshTokens(ok=ok, user=user_instance)
+        return RefreshTokens(ok=ok, user=None)
+            
+
 
 class Mutation(graphene.ObjectType):
-    send_friend_request = SendFriendRequest.Field()
-    accept_friend_request = AcceptFriendRequest.Field()
-    update_friend_request = UpdateFriendRequest.Field()
+    create_user = CreateUser.Field()
     update_user = UpdateUser.Field()
+    update_user_name = UpdateUserName.Field()
+    update_password = UpdatePassword.Field()
+    update_tokens = UpdateTokens.Field()
+    check_user_name = CheckUserName.Field()
+    refresh_tokens = RefreshTokens.Field()
 
 schema = graphene.Schema(query=Query, mutation=Mutation)

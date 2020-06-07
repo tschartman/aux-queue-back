@@ -12,24 +12,33 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 
 import os
 import django_heroku
+import environ
 
-# False if not in os.environ
-os.environ.get('DEBUG')
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+environ.Env.read_env()
+env = environ.Env()
+ASGI_APPLICATION = 'auxqueue.routing.application'
+
+SECRET_KEY = env('SECRET_KEY')
+APP_CLIENT_ID = env('APP_CLIENT_ID')
+APP_CLIENT_SECRET = env('APP_CLIENT_SECRET')
+SPOTIFY_CLIENT_ID = env('SPOTIFY_CLIENT_ID')
+SPOTIFY_CLIENT_SECRET = env('SPOTIFY_CLIENT_SECRET')
+API_ENDPOINT = env('API_ENDPOINT')
+DEBUG = env('DEBUG')
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-#SECRET_KEY = os.environ.get('SECRET_KEY')
-APP_CLIENT_ID = os.environ.get('APP_CLIENT_ID')
-APP_CLIENT_SECRET = os.environ.get('APP_CLIENT_SECRET')
-SPOTIFY_CLIENT_ID = os.environ.get('SPOTIFY_CLIENT_ID')
-SPOTIFY_CLIENT_SECRET = os.environ.get('SPOTIFY_CLIENT_SECRET')
-API_ENDPOINT = os.environ.get('API_ENDPOINT')
+# SECRET_KEY = os.environ.get('SECRET_KEY')
+# APP_CLIENT_ID = os.environ.get('APP_CLIENT_ID')
+# APP_CLIENT_SECRET = os.environ.get('APP_CLIENT_SECRET')
+# SPOTIFY_CLIENT_ID = os.environ.get('SPOTIFY_CLIENT_ID')
+# SPOTIFY_CLIENT_SECRET = os.environ.get('SPOTIFY_CLIENT_SECRET')
+# API_ENDPOINT = os.environ.get('API_ENDPOINT')
 
 ALLOWED_HOSTS = ['https://auxstack.herokuapp.com/', 'http://localhost:8000']
 
@@ -49,12 +58,25 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'channels',
+    'graphene_subscriptions',
     'users.apps.UsersConfig',
+    'followers.apps.FollowersConfig',
+    'party.apps.PartyConfig',
     'oauth2_provider',
 ]
 
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer"
+    }
+}
+
 GRAPHENE = {
-    'SCHEMA': 'auxqueue.schema.schema'
+    'SCHEMA': 'auxqueue.schema.schema',
+    'MIDDLEWARE': [
+        'graphql_jwt.middleware.JSONWebTokenMiddleware', 
+    ]
 }
 
 MIDDLEWARE = [
@@ -66,6 +88,12 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+]
+
+AUTHENTICATION_BACKENDS = [
+    'graphql_jwt.backends.JSONWebTokenBackend',
+    'django.contrib.auth.backends.ModelBackend',
 ]
 
 ROOT_URLCONF = 'auxqueue.urls'
@@ -124,7 +152,6 @@ OAUTH2_PROVIDER = {
 
 REST_FRAMEWORK = {
     # ...
-
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     )
