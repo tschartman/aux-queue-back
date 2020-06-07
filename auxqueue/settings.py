@@ -41,7 +41,7 @@ SPOTIFY_CLIENT_ID = os.environ.get('SPOTIFY_CLIENT_ID')
 SPOTIFY_CLIENT_SECRET = os.environ.get('SPOTIFY_CLIENT_SECRET')
 API_ENDPOINT = os.environ.get('API_ENDPOINT')
 
-ALLOWED_HOSTS = ['https://auxstack.herokuapp.com/', 'http://localhost:8000']
+ALLOWED_HOSTS = ['*']
 
 AUTH_USER_MODEL = 'users.CustomUser'
 
