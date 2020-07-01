@@ -21,6 +21,7 @@ class Guest(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='user', on_delete=models.CASCADE)
     allowed_requests = models.IntegerField(default=5)
     amount_requested = models.IntegerField(default=0)
+    status = models.SmallIntegerField(default=0)
 
 class Party(models.Model):
     name = models.CharField(max_length=30, blank=True, null=True)

@@ -30,7 +30,8 @@ class Query(ObjectType):
     
     @login_required
     def resolve_users(self, info, **kwargs):
-        return CustomUser.objects.all()
+        user = info.context.user
+        return CustomUser.objects.exclude(id=user.id)
 
     def resolve_userName(self, info, **kwargs):
         userName = Generator.generate_username() 

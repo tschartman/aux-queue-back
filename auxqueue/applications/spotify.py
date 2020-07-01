@@ -10,7 +10,7 @@ from django.conf import settings
 
 @csrf_exempt
 def auth(request):
-    return HttpResponseRedirect('https://accounts.spotify.com/authorize?client_id=420e781f275641c39c09ee6ca9f94275&response_type=code&redirect_uri=' + settings.API_ENDPOINT +'/spotify/code/&scope=playlist-modify-private,playlist-modify-public,user-read-currently-playing,user-read-recently-played,user-read-playback-state,user-top-read')
+    return HttpResponseRedirect('https://accounts.spotify.com/authorize?client_id=' + settings.SPOTIFY_CLIENT_ID + '&response_type=code&redirect_uri=' + settings.API_ENDPOINT +'/spotify/code/&scope=playlist-modify-private,playlist-modify-public,user-read-currently-playing,user-read-recently-played,user-read-playback-state,user-top-read')
 
 def code(request):
     code = request.GET.get('code', '')

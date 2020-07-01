@@ -7,7 +7,6 @@ from django.db.models import Q
 from rest_framework.permissions import AllowAny
 from rest_framework import permissions
 
-
 class RelationshipType(DjangoObjectType):
     class Meta:
         model = Relationship
@@ -15,6 +14,8 @@ class RelationshipType(DjangoObjectType):
 class Query(ObjectType):
     following = graphene.List(RelationshipType,)
     followers = graphene.List(RelationshipType,)
+    follow = graphene.Field(RelationshipType, userName=graphene.String())
+    follower = graphene.Field(RelationshipType, userName=graphene.String())
 
     def resolve_followers(self, info, **kwargs):
         user = info.context.user
@@ -24,30 +25,36 @@ class Query(ObjectType):
         user = info.context.user
         return Relationship.objects.filter(follower=user)
 
+    def resolve_follow(self, info, **kwargs):
+        user = info.context.user
+        following = CustomUser.objects.get(user_name=kwargs.get('userName'))
+        try:
+            follow = Relationship.objects.get(follower=user, following=following)
+            return follow
+        except Relationship.DoesNotExist:
+            return None
 
-class FollowerUserInput(graphene.InputObjectType):
-    userName = graphene.String()
-    email = graphene.String()
-    firstName = graphene.String()
-    lastName = graphene.String()
-    accessToken = graphene.String()
-    refreshToken = graphene.String()
+    def resolve_follower(self, info, **kwargs):
+        user = info.context.user
+        follower = CustomUser.objects.get(user_name=kwargs.get('userName'))
+        try:
+            follower = Relationship.objects.get(following=user, follower=follower)
+            return follower
+        except Relationship.DoesNotExist:
+            return None
+
 
 class FollowerInput(graphene.InputObjectType):
     id = graphene.ID()
     userName = graphene.String()
-    user_one = graphene.Field(FollowerUserInput)
-    user_two = graphene.Field(FollowerUserInput)
     status = graphene.String()
-    permissions = graphene.String()
-    actionId = graphene.Int()
 
 
 class SendFollowRequest(graphene.Mutation):
     class Arguments:
         input = FollowerInput(required=True)
     ok = graphene.Boolean()
-    Relationship = graphene.Field(RelationshipType)
+    following = graphene.Field(RelationshipType)
 
     @staticmethod
     def mutate(root, info, input=None):
@@ -62,47 +69,46 @@ class SendFollowRequest(graphene.Mutation):
             action_user_id = info.context.user.id
             )
         Relationship_instance.save()
-        return SendFollowRequest(ok=ok, Relationship=Relationship_instance)
+        return SendFollowRequest(ok=ok, following=Relationship_instance)
 
 class UpdateFollowRequest(graphene.Mutation):
     class Arguments:
         input = FollowerInput(required=True)
     ok = graphene.Boolean()
-    Relationship = graphene.Field(RelationshipType)
+    following = graphene.Field(RelationshipType)
 
     @staticmethod
     def mutate(root, info, input=None):
         ok = False
         follower = info.context.user
-        following = CustomUser.objects.get(user_name=input.userName)
-        Relationship_instance = Relationship.objects.get(following=following, follower=follower, status = 0)
-        if Relationship_instance:
+        try:
+            Relationship_instance = Relationship.objects.get(id=input.id, follower=follower)
             ok = True
             Relationship_instance.status = ["pending", "accepted", "declined", "blocked"].index(input.status)
             Relationship_instance.action_user_id = info.context.user.id
             Relationship_instance.save()
-            return UpdateFollowRequest(ok=ok, Relationship=Relationship_instance)
-        return UpdateFollowRequest(ok=ok, Relationship=None)
+            return UpdateFollowRequest(ok=ok, following=Relationship_instance)
+        except Relationship.DoesNotExist:
+            return UpdateFollowRequest(ok=ok, following=None)
 
 class UpdateFollowerRequest(graphene.Mutation):
     class Arguments:
         input = FollowerInput(required=True)
     ok = graphene.Boolean()
-    Relationship = graphene.Field(RelationshipType)
+    follower = graphene.Field(RelationshipType)
 
     @staticmethod
     def mutate(root, info, input=None):
         ok = False
         following = info.context.user
-        follower = CustomUser.objects.get(user_name=input.userName)
-        Relationship_instance = Relationship.objects.get(following=following, follower=follower)
+        Relationship_instance = Relationship.objects.get(id=input.id, following=following)
         if Relationship_instance:
             ok = True
             Relationship_instance.status = ["pending", "accepted", "declined", "blocked"].index(input.status)
             Relationship_instance.action_user_id = info.context.user.id
             Relationship_instance.save()
-            return UpdateFollowerRequest(ok=ok, Relationship=Relationship_instance)
-        return UpdateFollowerRequest(ok=ok, Relationship=None)
+            return UpdateFollowerRequest(ok=ok, follower=Relationship_instance)
+        return UpdateFollowerRequest(ok=ok, follower=None)
 
 class RemoveFollowRequest(graphene.Mutation):
     class Arguments:
@@ -113,8 +119,7 @@ class RemoveFollowRequest(graphene.Mutation):
     def mutate(root, info, input=None):
         ok = False
         follower = info.context.user
-        following = CustomUser.objects.get(user_name=input.userName)
-        Relationship_instance = Relationship.objects.get(follower = follower, following = following)
+        Relationship_instance = Relationship.objects.get(id=input.id, follower=follower)
         if Relationship_instance:
             ok = True
             Relationship_instance.delete()
@@ -130,8 +135,7 @@ class RemoveFollowerRequest(graphene.Mutation):
     def mutate(root, info, input=None):
         ok = False
         following = info.context.user
-        follower = CustomUser.objects.get(user_name=input.userName)
-        Relationship_instance = Relationship.objects.get(follower = follower, following = following)
+        Relationship_instance = Relationship.objects.get(id=input.id, following=following)
         if Relationship_instance:
             ok = True
             Relationship_instance.delete()
