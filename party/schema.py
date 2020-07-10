@@ -1,6 +1,7 @@
 import graphene
 from party.models import Party, SuggestedSong, Rating, Song, Guest
 from graphene_django.types import DjangoObjectType, ObjectType
+from graphene_subscriptions.events import CREATED, DELETED, UPDATED
 from followers.models import Relationship
 from users.models import CustomUser
 from auxqueue.applications.spotify import refresh, getCurrentSong
@@ -26,6 +27,34 @@ class SongType(DjangoObjectType):
 class RatingType(DjangoObjectType):
     class Meta:
         model = Rating
+
+
+class Subscription(graphene.ObjectType):
+    party_created = graphene.Field(PartyType)
+    party_deleted = graphene.Field(PartyType)
+    party_updated = graphene.Field(PartyType, id=graphene.ID())
+
+    def resolve_party_created(root, info):
+        return root.filter(
+            lambda event:
+                event.operation == CREATED and
+                isinstance(event.instance, Party)
+        ).map(lambda event: event.instance)
+    
+    def resolve_party_deleted(root, info):
+        return root.filter(
+            lambda event:
+                event.operation == DELETED and
+                isinstance(event.instance, Party)
+        ).map(lambda event: event.instance)
+
+    def resolve_party_updated(root, info, id):
+        return root.filter(
+            lambda event:
+                event.operation == UPDATED and
+                isinstance(event.instance, Party) and
+                event.instance.pk == int(id)
+        ).map(lambda event: event.instance)
 
 class Query(ObjectType):
     party = graphene.Field(PartyType, id=graphene.ID())
@@ -126,6 +155,7 @@ class AllowInParty(graphene.Mutation):
             guest = party.guests.get(id=input.id)
             guest.status = 1
             guest.save()
+            party.save()
             return AllowInParty(ok=True, party=party)
         except (Party.DoesNotExist, Guest.DoesNotExist) as e:
             return AllowInParty(ok=ok, party=None)
