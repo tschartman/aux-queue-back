@@ -8,7 +8,7 @@ class Query(users.schema.Query, followers.schema.Query, party.schema.Query, grap
 
     pass
 
-class Subscription(party.schema.Subscription):
+class Subscription(followers.schema.Subscription, party.schema.Subscription):
 
     pass
 
