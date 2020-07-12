@@ -1,6 +1,7 @@
 import graphene
 from graphql_jwt.decorators import login_required
 from graphene_django.types import DjangoObjectType, ObjectType
+from graphene_subscriptions.events import CREATED, DELETED, UPDATED
 from users.models import CustomUser
 from followers.models import Relationship
 from django.db.models import Q
@@ -10,6 +11,34 @@ from rest_framework import permissions
 class RelationshipType(DjangoObjectType):
     class Meta:
         model = Relationship
+
+class Subscription(graphene.ObjectType):
+    relationship_created = graphene.Field(RelationshipType)
+    relationship_deleted = graphene.Field(RelationshipType, id=graphene.ID())
+    relationship_updated = graphene.Field(RelationshipType, id=graphene.ID())
+
+    def resolve_relationship_created(root, info):
+        return root.filter(
+            lambda event:
+                event.operation == CREATED and
+                isinstance(event.instance, Relationship)
+        ).map(lambda event: event.instance)
+    
+    def resolve_relationship_deleted(root, info, id):
+        return root.filter(
+            lambda event:
+                event.operation == DELETED and
+                isinstance(event.instance, Relationship) and
+                event.instance.pk == int(id)
+        ).map(lambda event: event.instance)
+
+    def resolve_relationship_updated(root, info, id):
+        return root.filter(
+            lambda event:
+                event.operation == UPDATED and
+                isinstance(event.instance, Relationship) and
+                event.instance.pk == int(id)
+        ).map(lambda event: event.instance)
 
 class Query(ObjectType):
     following = graphene.List(RelationshipType,)
