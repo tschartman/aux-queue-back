@@ -4,9 +4,11 @@ from django import forms
 from django.shortcuts import redirect
 import requests
 import base64
+from party.models import Party, Song
 import json
 from urllib import parse
 from django.conf import settings
+import time
 
 @csrf_exempt
 def auth(request):
@@ -60,3 +62,27 @@ def getCurrentSong(user):
         return response.json()
     else:
         return None
+
+def updateSong(user):
+    while Party.objects.filter(host=user).count() > 0:
+        time.sleep(1)
+        print("polling spotify")
+        party = Party.objects.get(host=user)
+        playing = getCurrentSong(party.host)
+        if(playing != None and playing.get('item') != None):
+            playing = playing.get('item')
+            try:
+                current_song = Song.objects.get(song_uri = playing.get('uri'))
+                party.currently_playing = current_song
+                party.save()
+            except Song.DoesNotExist:
+                current_song = Song(
+                    title = playing.get('name'),
+                    artist = playing['artists'][0].get('name'),
+                    album = playing['album'].get('name'),
+                    cover_uri = playing['album']['images'][0].get('url'),
+                    song_uri = playing.get('uri'),
+                )
+                current_song.save()
+                party.currently_playing = current_song
+                party.save()

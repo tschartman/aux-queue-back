@@ -3,9 +3,11 @@ from party.models import Party, SuggestedSong, Rating, Song, Guest
 from graphene_django.types import DjangoObjectType, ObjectType
 from followers.models import Relationship
 from users.models import CustomUser
-from auxqueue.applications.spotify import refresh, getCurrentSong
+from auxqueue.applications.spotify import refresh, getCurrentSong, updateSong
 from django.db.models import Q
 import json
+import threading
+import time
 
 class PartyType(DjangoObjectType):
     class Meta:
@@ -85,7 +87,11 @@ class CreateParty(graphene.Mutation):
         except Party.DoesNotExist:
             party_instance = Party(host = user)
             party_instance.save()
+            # thread = threading.Thread(target=updateSong, args=(user,))
+            # thread.start()      
             return CreateParty(ok=True, party=party_instance)
+
+                
 
 class JoinParty(graphene.Mutation):
     class Arguments:
