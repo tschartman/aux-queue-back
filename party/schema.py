@@ -37,17 +37,23 @@ class Subscription(graphene.ObjectType):
     party_updated = graphene.Field(PartyType, id=graphene.ID())
 
     def resolve_party_created(root, info):
+        user = info.context.user
+        following = Relationship.objects.filter(follower=user, status=1).values('following')
         return root.filter(
             lambda event:
                 event.operation == CREATED and
-                isinstance(event.instance, Party)
+                isinstance(event.instance, Party) and
+                event.instance.host in following
         ).map(lambda event: event.instance)
     
     def resolve_party_deleted(root, info):
+        user = info.context.user
+        following = Relationship.objects.filter(follower=user, status=1).values('following')
         return root.filter(
             lambda event:
                 event.operation == DELETED and
-                isinstance(event.instance, Party)
+                isinstance(event.instance, Party) and
+                event.instance.host in following
         ).map(lambda event: event.instance)
 
     def resolve_party_updated(root, info, id):
@@ -116,8 +122,8 @@ class CreateParty(graphene.Mutation):
         except Party.DoesNotExist:
             party_instance = Party(host = user)
             party_instance.save()
-            # thread = threading.Thread(target=updateSong, args=(user,))
-            # thread.start()      
+            thread = threading.Thread(target=updateSong, args=(user,))
+            thread.start()      
             return CreateParty(ok=True, party=party_instance)
 
                 
