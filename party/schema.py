@@ -32,28 +32,36 @@ class RatingType(DjangoObjectType):
 
 
 class Subscription(graphene.ObjectType):
-    party_created = graphene.Field(PartyType)
-    party_deleted = graphene.Field(PartyType)
+    party_created = graphene.Field(PartyType, userName=graphene.String())
+    party_deleted = graphene.Field(PartyType, userName=graphene.String())
+    parties_updated = graphene.Field(PartyType, userName=graphene.String())
     party_updated = graphene.Field(PartyType, id=graphene.ID())
 
-    def resolve_party_created(root, info):
-        user = info.context.user
-        following = Relationship.objects.filter(follower=user, status=1).values('following')
+    def resolve_party_created(root, info, userName):
+        user = CustomUser.objects.get(user_name=userName)
         return root.filter(
             lambda event:
                 event.operation == CREATED and
                 isinstance(event.instance, Party) and
-                event.instance.host in following
+                Relationship.objects.filter(follower=user, following=event.instance.host, status=1).count() > 0
         ).map(lambda event: event.instance)
     
-    def resolve_party_deleted(root, info):
-        user = info.context.user
-        following = Relationship.objects.filter(follower=user, status=1).values('following')
+    def resolve_party_deleted(root, info, userName):
+        user = CustomUser.objects.get(user_name=userName)
         return root.filter(
             lambda event:
                 event.operation == DELETED and
                 isinstance(event.instance, Party) and
-                event.instance.host in following
+                Relationship.objects.filter(follower=user, following=event.instance.host, status=1).count() > 0
+        ).map(lambda event: event.instance)
+
+    def resolve_parties_updated(root, info, userName):
+        user = CustomUser.objects.get(user_name=userName)
+        return root.filter(
+            lambda event:
+                event.operation == UPDATED and
+                isinstance(event.instance, Party) and
+                (event.instance.host == user or Relationship.objects.filter(follower=user, following=event.instance.host, status=1).count() > 0)
         ).map(lambda event: event.instance)
 
     def resolve_party_updated(root, info, id):
