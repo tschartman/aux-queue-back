@@ -13,15 +13,19 @@ class RelationshipType(DjangoObjectType):
         model = Relationship
 
 class Subscription(graphene.ObjectType):
-    relationship_created = graphene.Field(RelationshipType)
+    relationship_created = graphene.Field(RelationshipType, userName=graphene.String())
     relationship_deleted = graphene.Field(RelationshipType, id=graphene.ID())
+    relationships_deleted = graphene.Field(RelationshipType, userName=graphene.String())
     relationship_updated = graphene.Field(RelationshipType, id=graphene.ID())
+    relationships_updated = graphene.Field(RelationshipType, userName=graphene.String())
 
-    def resolve_relationship_created(root, info):
+    def resolve_relationship_created(root, info, userName):
+        user = CustomUser.objects.get(user_name=userName)
         return root.filter(
             lambda event:
                 event.operation == CREATED and
-                isinstance(event.instance, Relationship)
+                isinstance(event.instance, Relationship) and
+                (event.instance.follower == user or event.instance.following == user)
         ).map(lambda event: event.instance)
     
     def resolve_relationship_deleted(root, info, id):
@@ -32,12 +36,30 @@ class Subscription(graphene.ObjectType):
                 event.instance.pk == int(id)
         ).map(lambda event: event.instance)
 
+    def resolve_relationships_deleted(root, info, userName):
+        user = CustomUser.objects.get(user_name=userName)
+        return root.filter(
+            lambda event:
+                event.operation == DELETED and
+                isinstance(event.instance, Relationship) and
+                (event.instance.follower == user or event.instance.following == user)
+        ).map(lambda event: event.instance)
+
     def resolve_relationship_updated(root, info, id):
         return root.filter(
             lambda event:
                 event.operation == UPDATED and
                 isinstance(event.instance, Relationship) and
                 event.instance.pk == int(id)
+        ).map(lambda event: event.instance)
+
+    def resolve_relationships_updated(root, info, userName):
+        user = CustomUser.objects.get(user_name=userName)
+        return root.filter(
+            lambda event:
+                event.operation == UPDATED and
+                isinstance(event.instance, Relationship) and
+                (event.instance.follower == user or event.instance.following == user)
         ).map(lambda event: event.instance)
 
 class Query(ObjectType):
