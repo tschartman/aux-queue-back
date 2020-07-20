@@ -29,3 +29,5 @@ class Party(models.Model):
     host = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='host', on_delete=models.CASCADE)
     guests = models.ManyToManyField(Guest)
     queue = models.ManyToManyField(SuggestedSong)
+    limit_requests = models.BooleanField(default=True)
+    starting_requests = models.IntegerField(default=5)
