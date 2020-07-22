@@ -138,8 +138,8 @@ class CreateParty(graphene.Mutation):
                                    name = input.name,
                                    limit_requests = input.limit,
                                    starting_requests = input.requests)
-            party_instance.save()
-            executor.submit(updateSong, (user))
+            # party_instance.save()
+            # executor.submit(updateSong, (user))
             return CreateParty(ok=True, party=party_instance)
 
                 

@@ -69,26 +69,29 @@ def updateSong(user):
     i = 3
     while Party.objects.filter(host=user).count() > 0:
         time.sleep(i)
-        logging.info(f"polling spotify {user.user_name}'s party every {i} sec")
+        logging.info(f"polling {user.user_name}'s party every {i} sec")
         try:
             party = Party.objects.get(host=user)
             playing = getCurrentSong(party.host)
             if(playing != None and playing.get('item') != None):
                 playing = playing.get('item')
-                try:
-                    current_song = Song.objects.get(song_uri = playing.get('uri'))
-                    party.currently_playing = current_song
-                    party.save()
-                except Song.DoesNotExist:
-                    current_song = Song(
-                        title = playing.get('name'),
-                        artist = playing['artists'][0].get('name'),
-                        album = playing['album'].get('name'),
-                        cover_uri = playing['album']['images'][0].get('url'),
-                        song_uri = playing.get('uri'),
-                    )
-                    current_song.save()
-                    party.currently_playing = current_song
-                    party.save()
+                if party.currently_playing and party.currently_playing.song_uri == playing.get('uri'):
+                    pass
+                else:
+                    try:
+                        current_song = Song.objects.get(song_uri = playing.get('uri'))
+                        party.currently_playing = current_song
+                        party.save()
+                    except Song.DoesNotExist:
+                        current_song = Song(
+                            title = playing.get('name'),
+                            artist = playing['artists'][0].get('name'),
+                            album = playing['album'].get('name'),
+                            cover_uri = playing['album']['images'][0].get('url'),
+                            song_uri = playing.get('uri'),
+                        )
+                        current_song.save()
+                        party.currently_playing = current_song
+                        party.save()
         except Party.DoesNotExist:
             break
