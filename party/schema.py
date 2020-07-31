@@ -202,6 +202,7 @@ class RemoveFromParty(graphene.Mutation):
             guest = party.guests.get(id=input.id)
             guest.status = 2
             guest.save()
+            party.save()
             return RemoveFromParty(ok=True, party=party)
         except (Party.DoesNotExist, Guest.DoesNotExist) as e:
             return RemoveFromParty(ok=ok, party=None) 
