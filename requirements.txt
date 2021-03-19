@@ -19,7 +19,7 @@ django-filter==2.2.0
 django-graphql-jwt==0.3.1
 django-heroku==0.3.1
 django-oauth-toolkit==1.2.0
-djangorestframework==3.11.0
+djangorestframework==3.11.2
 graphene==2.1.8
 graphene-django==2.9.1
 graphene-subscriptions==1.0.2
